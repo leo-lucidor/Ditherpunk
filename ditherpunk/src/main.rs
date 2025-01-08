@@ -1,4 +1,5 @@
 use argh::FromArgs;
+use image::{open, DynamicImage, ImageError};
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
@@ -52,6 +53,18 @@ const CYAN: image::Rgb<u8> = image::Rgb([0, 255, 255]);
 
 fn main() -> Result<(), ImageError>{
     let args: DitherArgs = argh::from_env();
+
     let path_in = args.input;
+    let path_out = args.output.unwrap_or("./img/IUT_OUT.png".to_string());
+
+    // Ouvrir l'image
+    let mut img: DynamicImage = open(path_in)?;
+
+    let rgb_image = img.to_rgb8();
+
+    rgb_image.save(&path_out).unwrap();
+    
+    
+    //
     Ok(())
 }
