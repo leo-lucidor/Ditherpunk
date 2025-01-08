@@ -1,4 +1,5 @@
 use argh::FromArgs;
+use image::ImageError;
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
