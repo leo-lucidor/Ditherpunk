@@ -26,3 +26,33 @@ cargo run -- img/IUT.jpg img/IUT_OUT.png seuil
 
 - Pour afficher la couleur du pixel (32, 52) d'une image. Il nous faut utiliser la fonction "get_pixel()" avec les coordonnées "32, 52".
 - Il nous faut ensuite exectuter "println!("Pixel (32, 52) : {:?}", pixel);" pour afficher la couleur en RGB du Pixel.
+
+### Question 5 - Passer un pixel sur deux d’une image en blanc. Est-ce que l’image obtenue est reconnaissable?
+
+# Passer un pixel sur deux d’une image en blanc : Est-ce que l’image obtenue est reconnaissable ?
+
+Lorsqu’on passe un pixel sur deux d’une image en blanc, l’image résultante reste souvent reconnaissable, bien que son apparence soit altérée. La perception humaine est particulièrement douée pour interpréter des motifs et reconstruire des formes même lorsqu’une partie de l’information visuelle est absente ou modifiée.
+
+Cependant, plusieurs facteurs influencent la reconnaissance :
+
+# Passer un pixel sur deux d’une image en blanc : Est-ce que l’image obtenue est reconnaissable ?
+
+- Pour modifier l'image, j'ai utilisé un simple algorithme qui parcourt chaque pixel et passe un pixel sur deux en blanc (`rgb(255, 255, 255)`). Voici le code utilisé :
+
+```rust
+let mut pixelblanc = false;
+
+for (x, y, pixel) in rgb_image.enumerate_pixels_mut() {
+    if pixelblanc {
+        // passer le pixel en blanc en utilisant le rgb(255, 255, 255)
+        pixel.0[0] = 255;
+        pixel.0[1] = 255;
+        pixel.0[2] = 255;
+        pixelblanc = false;
+    } else {
+        pixelblanc = true;
+    }
+}
+```
+
+- Grâce à la haute résolution de l'image utilisé, l'image obtenue reste bien reconnaissable malgré cette transformation.

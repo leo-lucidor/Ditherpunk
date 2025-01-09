@@ -60,7 +60,21 @@ fn main() -> Result<(), ImageError>{
     // Ouvrir l'image
     let mut img: DynamicImage = open(path_in)?;
 
-    let rgb_image = img.to_rgb8();
+    let mut rgb_image = img.to_rgb8();
+
+    let mut pixelblanc = false;
+
+    for (x, y, pixel) in rgb_image.enumerate_pixels_mut() {
+        if pixelblanc {
+            // passer le pixel en blanc en utilisant le rgb(255, 255, 255)
+            pixel.0[0] = 255;
+            pixel.0[1] = 255;
+            pixel.0[2] = 255;
+            pixelblanc = false;
+        } else {
+            pixelblanc = true;
+        }
+    }
 
     // Afficher dans le terminal la couleur du pixel (32, 52) de l’image
     let pixel = rgb_image.get_pixel(32, 52);
