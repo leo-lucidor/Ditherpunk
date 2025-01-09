@@ -62,6 +62,10 @@ fn main() -> Result<(), ImageError>{
 
     let rgb_image = img.to_rgb8();
 
+    // Afficher dans le terminal la couleur du pixel (32, 52) de l’image
+    let pixel = rgb_image.get_pixel(32, 52);
+    println!("Pixel (32, 52) : {:?}", pixel);
+
     rgb_image.save(&path_out).unwrap();
     
     
