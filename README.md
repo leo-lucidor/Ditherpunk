@@ -56,3 +56,6 @@ for (x, y, pixel) in rgb_image.enumerate_pixels_mut() {
 ```
 
 - Grâce à la haute résolution de l'image utilisé, l'image obtenue reste bien reconnaissable malgré cette transformation.
+
+### Question 6
+
