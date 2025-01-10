@@ -52,6 +52,10 @@ const YELLOW: image::Rgb<u8> = image::Rgb([255, 255, 0]);
 const MAGENTA: image::Rgb<u8> = image::Rgb([255, 0, 255]);
 const CYAN: image::Rgb<u8> = image::Rgb([0, 255, 255]);
 
+const PALETTE: [Rgb<u8>; 8] = [
+    BLACK, WHITE, BLUE, RED, GREEN, YELLOW, MAGENTA, CYAN
+];
+
 fn luminosity_of_pixel(pixel: Rgb<u8>) -> f32 {
     // Extraire les canaux R, G, B du pixel
     let (r, g, b) = (pixel[0], pixel[1], pixel[2]);
@@ -100,6 +104,30 @@ fn color_distance(c1: Rgb<u8>, c2: Rgb<u8>) -> f32 {
     ((r_diff.powi(2) + g_diff.powi(2) + b_diff.powi(2)).sqrt())
 }
 
+fn to_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let closest_color = find_closest_color(*pixel, palette);
+            image.put_pixel(x, y, closest_color);
+        }
+    }
+}
+
+fn find_closest_color(pixel: Rgb<u8>, palette: &[Rgb<u8>]) -> Rgb<u8> {
+    let mut min_distance = f32::MAX;
+    let mut closest_color = palette[0];
+
+    for &color in palette {
+        let distance = color_distance(pixel, color);
+        if distance < min_distance {
+            min_distance = distance;
+            closest_color = color;
+        }
+    }
+
+    closest_color
+}
 
 fn main() -> Result<(), ImageError>{
     let args: DitherArgs = argh::from_env();
@@ -122,11 +150,11 @@ fn main() -> Result<(), ImageError>{
     let luminosity = luminosity_of_pixel(*pixel);
     println!("La luminosité du pixel (100, 100) est : {}", luminosity);
 
-    // Appliquer le traitement monochrome avec les couleurs personnalisées
-    to_pair_colors(&mut rgb_image, BLUE, RED);
+    // Convertir l'image à la palette
+    to_palette(&mut rgb_image, &PALETTE);
 
     // Appliquer le traitement de distance entre deux couleurs
-    let distance = color_distance(BLUE, RED);
+    let distance = color_distance(BLACK, BLACK);
     println!("La distance entre rouge et bleu est : {}", distance);
 
     rgb_image.save(&path_out).unwrap();
