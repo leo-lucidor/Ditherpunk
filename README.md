@@ -144,4 +144,40 @@ fn to_pair_colors(image: &mut RgbImage, color_low: Rgb<u8>, color_high: Rgb<u8>)
 
 ---
 
+### Question 9 - Comment calculer la distance entre deux couleurs? Indiquer dans le README la méthode de calcul choisie
 
+- Pourquoi choisir la distance euclidienne ?
+
+    - Simplicité : La distance euclidienne est facile à comprendre et à implémenter.
+    - Performance : Calculer cette distance est rapide et suffisant pour la plupart des applications en RGB.
+    - Applications courantes : Elle est souvent utilisée dans des algorithmes de clustering (comme K-means) et dans les comparaisons simples de couleurs.
+
+Voici la fonction crée avec le choix de la distance euclidienne :
+
+```rust
+fn color_distance(c1: Rgb<u8>, c2: Rgb<u8>) -> f32 {
+    let r_diff = c1[0] as f32 - c2[0] as f32;
+    let g_diff = c1[1] as f32 - c2[1] as f32;
+    let b_diff = c1[2] as f32 - c2[2] as f32;
+
+    // Calcul de la distance euclidienne
+    ((r_diff.powi(2) + g_diff.powi(2) + b_diff.powi(2)).sqrt())
+}
+```
+
+- La méthode utilisée pour calculer la distance entre deux couleurs est basée sur la distance euclidienne dans l'espace RGB. Voici la formule employée :
+distance= √{(R_2 - R_1)^2 + (G_2 - G_1)^2 + (B_2 - B_1)^2}
+
+
+Distance minimale (0) :
+
+    La distance entre deux couleurs est 0 lorsque les couleurs sont identiques. Cela signifie que les composantes RGB de chaque couleur sont identiques, donc R1=R2R1​=R2​, G1=G2G1​=G2​, et B1=B2B1​=B2​.
+    Par exemple, la distance entre rouge (255,0,0)(255,0,0) et rouge (255,0,0)(255,0,0) est 0.
+
+Distance maximale (√(255² + 255² + 255²)) :
+
+    La distance maximale se produit lorsque les couleurs sont complètement opposées dans l'espace RGB. Cela se produit, par exemple, lorsque l'une des couleurs est complètement noire (0,0,0)(0,0,0) et l'autre complètement blanche (255,255,255)(255,255,255), ou si les composantes de l'une des couleurs sont maximales (255) et minimales (0) dans toutes les composantes RGB.
+    Pour calculer la distance maximale, on suppose que chaque composante RR, GG, et BB varie de 0 à 255. La distance maximale entre deux couleurs sera donc :
+
+    distance maximale=(255−0)2+(255−0)2+(255−0)2
+    distance maximale=2552+2552+2552=3×2552≈3×65025≈195075≈441.67
