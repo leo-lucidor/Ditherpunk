@@ -240,3 +240,23 @@ Lorsqu'on applique cette méthode, chaque pixel de l’image originale est rempl
 
 --- 
 
+### Question 11 - Votre application doit se comporter correctement si on donne une palette vide. Vous expliquerez dans votre README le choix que vous avez fait dans ce cas
+
+Lorsque l'application reçoit une palette vide, elle ne modifie pas l'image et affiche un message d'information dans la console : 
+
+    La palette est vide. Aucun traitement n'est appliqué.
+
+Cela garantit que l'application reste stable et n'essaie pas de comparer des pixels à une palette inexistante.
+
+---
+
+#### Justification du choix
+
+1. **Robustesse :** En ne modifiant rien, nous évitons des erreurs ou des comportements inattendus (comme une tentative d'accès à un élément inexistant dans la palette).
+2. **Clarté pour l'utilisateur :** L'utilisateur est informé que la palette est vide grâce à un message clair.
+3. **Non-destruction :** Il est préférable de ne rien faire que de produire des résultats inattendus (par exemple, remplir l'image avec une couleur par défaut).
+
+---
+
+
+
