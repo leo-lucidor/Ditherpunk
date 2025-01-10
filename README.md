@@ -93,7 +93,7 @@ fn luminosity_of_pixel(pixel: Rgb<u8>) -> f32 {
 - Si la luminosité dépasse 50% de son maximum (127.5 sur une échelle de 0 à 255), le pixel sera remplacé par blanc → R=G=B=255R=G=B=255 → Rgb([255, 255, 255])
 - Sinon, il sera remplacé par noir → R=G=B=0R=G=B=0 → Rgb([0, 0, 0])
 
-Voici le fonction crée passer une image en monochrome :
+Voici le code de la fonction crée passer une image en monochrome :
 
 ```rust
 fn to_monochrome(image: &mut RgbImage) {
@@ -115,3 +115,33 @@ fn to_monochrome(image: &mut RgbImage) {
 - La fonction **to_monochrome** convertit une image couleur en une image monochrome (noir et blanc) en remplaçant chaque pixel par du blanc ou du noir en fonction de sa luminosité.
 
 ---
+
+### Question 8 - Permettre à l’utilisateurice de remplacer “noir” et “blanc” par une paire de couleurs au choix
+
+- Pour permettre à l'utilisateur ou à l'utilisatrice de remplacer le "noir" et le "blanc" par une paire de couleurs personnalisées, nous avons ajoutée deux paramètres couleurs à l'appel de la fonction.
+
+Voici le code la fonction crée :
+
+```rust
+fn to_pair_colors(image: &mut RgbImage, color_low: Rgb<u8>, color_high: Rgb<u8>) {
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let luminosity = luminosity_of_pixel(*pixel);
+
+            // Remplacement par `color_high` ou `color_low` en fonction de la luminosité
+            if luminosity > 127.5 {
+                image.put_pixel(x, y, color_high);
+            } else {
+                image.put_pixel(x, y, color_low);
+            }
+        }
+    }
+}
+```
+
+- Cette fonction remplace les pixels de l'image par une paire de couleurs en fonction de la luminosité des pixels. Les utilisateurs peuvent choisir librement les couleurs pour les zones sombres et claires.
+
+---
+
+

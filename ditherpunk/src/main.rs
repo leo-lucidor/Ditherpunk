@@ -75,6 +75,22 @@ fn to_monochrome(image: &mut RgbImage) {
     }
 }
 
+fn to_pair_colors(image: &mut RgbImage, color_low: Rgb<u8>, color_high: Rgb<u8>) {
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let luminosity = luminosity_of_pixel(*pixel);
+
+            // Remplacement par `color_high` ou `color_low` en fonction de la luminosité
+            if luminosity > 127.5 {
+                image.put_pixel(x, y, color_high);
+            } else {
+                image.put_pixel(x, y, color_low);
+            }
+        }
+    }
+}
+
 fn main() -> Result<(), ImageError>{
     let args: DitherArgs = argh::from_env();
 
@@ -96,8 +112,8 @@ fn main() -> Result<(), ImageError>{
     let luminosity = luminosity_of_pixel(*pixel);
     println!("La luminosité du pixel (100, 100) est : {}", luminosity);
 
-    // Appliquer le traitement monochrome
-    to_monochrome(&mut rgb_image);
+    // Appliquer le traitement monochrome avec les couleurs personnalisées
+    to_pair_colors(&mut rgb_image, BLUE, RED);
 
     rgb_image.save(&path_out).unwrap();
     
