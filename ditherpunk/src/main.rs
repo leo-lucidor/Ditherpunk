@@ -52,8 +52,8 @@ const YELLOW: image::Rgb<u8> = image::Rgb([255, 255, 0]);
 const MAGENTA: image::Rgb<u8> = image::Rgb([255, 0, 255]);
 const CYAN: image::Rgb<u8> = image::Rgb([0, 255, 255]);
 
-const PALETTE: [Rgb<u8>; 8] = [
-    BLACK, WHITE, BLUE, RED, GREEN, YELLOW, MAGENTA, CYAN
+const PALETTE: [Rgb<u8>; 0] = [
+    
 ];
 
 fn luminosity_of_pixel(pixel: Rgb<u8>) -> f32 {
@@ -105,6 +105,12 @@ fn color_distance(c1: Rgb<u8>, c2: Rgb<u8>) -> f32 {
 }
 
 fn to_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
+    // Si la palette est vide, on ne fait rien
+    if palette.is_empty() {
+        println!("La palette est vide. Aucun traitement n'est appliqué.");
+        return;
+    }
+
     for y in 0..image.height() {
         for x in 0..image.width() {
             let pixel = image.get_pixel(x, y);
