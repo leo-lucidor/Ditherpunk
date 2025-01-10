@@ -82,7 +82,6 @@ fn main() -> Result<(), ImageError>{
 
     rgb_image.save(&path_out).unwrap();
     
-    
     //
     Ok(())
 }
