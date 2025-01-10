@@ -91,6 +91,16 @@ fn to_pair_colors(image: &mut RgbImage, color_low: Rgb<u8>, color_high: Rgb<u8>)
     }
 }
 
+fn color_distance(c1: Rgb<u8>, c2: Rgb<u8>) -> f32 {
+    let r_diff = c1[0] as f32 - c2[0] as f32;
+    let g_diff = c1[1] as f32 - c2[1] as f32;
+    let b_diff = c1[2] as f32 - c2[2] as f32;
+
+    // Calcul de la distance euclidienne
+    ((r_diff.powi(2) + g_diff.powi(2) + b_diff.powi(2)).sqrt())
+}
+
+
 fn main() -> Result<(), ImageError>{
     let args: DitherArgs = argh::from_env();
 
@@ -114,6 +124,10 @@ fn main() -> Result<(), ImageError>{
 
     // Appliquer le traitement monochrome avec les couleurs personnalisées
     to_pair_colors(&mut rgb_image, BLUE, RED);
+
+    // Appliquer le traitement de distance entre deux couleurs
+    let distance = color_distance(BLUE, RED);
+    println!("La distance entre rouge et bleu est : {}", distance);
 
     rgb_image.save(&path_out).unwrap();
     
