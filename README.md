@@ -258,5 +258,57 @@ Cela garantit que l'application reste stable et n'essaie pas de comparer des pix
 
 ---
 
+### Question 12 - Implémenter le tramage aléatoire des images
+
+#### 1. Principe du tramage aléatoire :
+
+    Pour chaque pixel, un seuil aléatoire est généré entre 0 et 255.
+    La luminosité du pixel est comparée à ce seuil :
+        Si la luminosité >> seuil aléatoire, le pixel devient blanc.
+        Sinon, le pixel devient noir.
+
+#### 2. Utilisation de rand::Rng:
+
+    Le générateur aléatoire rand::thread_rng() est utilisé pour produire un seuil différent pour chaque pixel.
+    La plage [0.0,255.0][0.0,255.0] garantit que le seuil aléatoire est comparable à la luminosité calculée, qui est également dans cet intervalle.
+
+#### 3. Luminosité d’un pixel :
+
+    La fonction luminosity_of_pixel(pixel) (définie précédemment) calcule la luminosité pondérée selon les composantes RGB.
+
+Avant tramage
+
+    L'image est composée de couleurs ou de niveaux de gris.
+
+Après tramage aléatoire
+
+    L'image est composée uniquement de noir et de blanc, mais avec des motifs aléatoires qui ajoutent une impression de nuances.
+
+Voici la fonction crée pour implémenter le tramage aléatoire des images :
+
+```rust
+fn random_dithering(image: &mut RgbImage) {
+    let mut rng = rand::thread_rng(); // Générateur de nombres aléatoires
+
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let luminosity = luminosity_of_pixel(*pixel);
+
+            // Générer un seuil aléatoire entre 0 et 255
+            let random_threshold = rng.gen_range(0.0..255.0);
+
+            // Déterminer la nouvelle couleur en fonction de la luminosité et du seuil
+            if luminosity > random_threshold {
+                image.put_pixel(x, y, WHITE);
+            } else {
+                image.put_pixel(x, y, BLACK);
+            }
+        }
+    }
+}
+```
+
+---
 
 

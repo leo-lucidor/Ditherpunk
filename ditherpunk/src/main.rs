@@ -1,6 +1,7 @@
 use argh::FromArgs;
 use image::{open, DynamicImage, ImageError};
 use image::{RgbImage, Rgb};
+use rand::Rng; // Pour générer des nombres aléatoires
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
@@ -95,6 +96,7 @@ fn to_pair_colors(image: &mut RgbImage, color_low: Rgb<u8>, color_high: Rgb<u8>)
     }
 }
 
+// Question 9
 fn color_distance(c1: Rgb<u8>, c2: Rgb<u8>) -> f32 {
     let r_diff = c1[0] as f32 - c2[0] as f32;
     let g_diff = c1[1] as f32 - c2[1] as f32;
@@ -103,7 +105,9 @@ fn color_distance(c1: Rgb<u8>, c2: Rgb<u8>) -> f32 {
     // Calcul de la distance euclidienne
     ((r_diff.powi(2) + g_diff.powi(2) + b_diff.powi(2)).sqrt())
 }
+// ---------------------------------------------------------
 
+// Question 11
 fn to_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
     // Si la palette est vide, on ne fait rien
     if palette.is_empty() {
@@ -134,6 +138,30 @@ fn find_closest_color(pixel: Rgb<u8>, palette: &[Rgb<u8>]) -> Rgb<u8> {
 
     closest_color
 }
+// ---------------------------------------------------------
+
+// Question 12
+fn random_dithering(image: &mut RgbImage) {
+    let mut rng = rand::thread_rng(); // Générateur de nombres aléatoires
+
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let luminosity = luminosity_of_pixel(*pixel);
+
+            // Générer un seuil aléatoire entre 0 et 255
+            let random_threshold = rng.gen_range(0.0..255.0);
+
+            // Déterminer la nouvelle couleur en fonction de la luminosité et du seuil
+            if luminosity > random_threshold {
+                image.put_pixel(x, y, WHITE);
+            } else {
+                image.put_pixel(x, y, BLACK);
+            }
+        }
+    }
+}
+// ---------------------------------------------------------
 
 fn main() -> Result<(), ImageError>{
     let args: DitherArgs = argh::from_env();
@@ -156,8 +184,8 @@ fn main() -> Result<(), ImageError>{
     let luminosity = luminosity_of_pixel(*pixel);
     println!("La luminosité du pixel (100, 100) est : {}", luminosity);
 
-    // Convertir l'image à la palette
-    to_palette(&mut rgb_image, &PALETTE);
+    // Appliquer le tramage aléatoire
+    random_dithering(&mut rgb_image);
 
     // Appliquer le traitement de distance entre deux couleurs
     let distance = color_distance(BLACK, BLACK);
