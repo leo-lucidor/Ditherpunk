@@ -65,7 +65,7 @@ for (x, y, pixel) in rgb_image.enumerate_pixels_mut() {
 
 ---
 
-### Question 6
+### Question 6 - Comment récupérer la luminosité d’un pixel?
 
 - La luminosité d’un pixel peut être estimée en appliquant une formule pondérée, qui tient compte de la sensibilité humaine aux différentes couleurs :
 **Luminosité=0.299×R+0.587×G+0.114×B**
@@ -87,3 +87,31 @@ fn luminosity_of_pixel(pixel: Rgb<u8>) -> f32 {
     - Valeur maximale : 255.0255.0 (luminosité d’un pixel complètement blanc).
 
 --- 
+
+### Question 7 - Implémenter le traitement
+
+- Si la luminosité dépasse 50% de son maximum (127.5 sur une échelle de 0 à 255), le pixel sera remplacé par blanc → R=G=B=255R=G=B=255 → Rgb([255, 255, 255])
+- Sinon, il sera remplacé par noir → R=G=B=0R=G=B=0 → Rgb([0, 0, 0])
+
+Voici le fonction crée passer une image en monochrome :
+
+```rust
+fn to_monochrome(image: &mut RgbImage) {
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let luminosity = luminosity_of_pixel(*pixel);
+
+            // Remplacement par blanc ou noir en fonction de la luminosité
+            if luminosity > 127.5 {
+                image.put_pixel(x, y, WHITE);
+            } else {
+                image.put_pixel(x, y, BLACK);
+            }
+        }
+    }
+}
+```
+- La fonction **to_monochrome** convertit une image couleur en une image monochrome (noir et blanc) en remplaçant chaque pixel par du blanc ou du noir en fonction de sa luminosité.
+
+---

@@ -59,6 +59,22 @@ fn luminosity_of_pixel(pixel: Rgb<u8>) -> f32 {
     0.299 * r as f32 + 0.587 * g as f32 + 0.114 * b as f32
 }
 
+fn to_monochrome(image: &mut RgbImage) {
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let luminosity = luminosity_of_pixel(*pixel);
+
+            // Remplacement par blanc ou noir en fonction de la luminosité
+            if luminosity > 127.5 {
+                image.put_pixel(x, y, WHITE);
+            } else {
+                image.put_pixel(x, y, BLACK);
+            }
+        }
+    }
+}
+
 fn main() -> Result<(), ImageError>{
     let args: DitherArgs = argh::from_env();
 
@@ -79,6 +95,9 @@ fn main() -> Result<(), ImageError>{
     // Calculer la luminosité du pixel
     let luminosity = luminosity_of_pixel(*pixel);
     println!("La luminosité du pixel (100, 100) est : {}", luminosity);
+
+    // Appliquer le traitement monochrome
+    to_monochrome(&mut rgb_image);
 
     rgb_image.save(&path_out).unwrap();
     
