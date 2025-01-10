@@ -1,5 +1,6 @@
 use argh::FromArgs;
 use image::{open, DynamicImage, ImageError};
+use image::{RgbImage, Rgb};
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
@@ -51,6 +52,13 @@ const YELLOW: image::Rgb<u8> = image::Rgb([255, 255, 0]);
 const MAGENTA: image::Rgb<u8> = image::Rgb([255, 0, 255]);
 const CYAN: image::Rgb<u8> = image::Rgb([0, 255, 255]);
 
+fn luminosity_of_pixel(pixel: Rgb<u8>) -> f32 {
+    // Extraire les canaux R, G, B du pixel
+    let (r, g, b) = (pixel[0], pixel[1], pixel[2]);
+    // Calcul de la luminosité en utilisant la formule pondérée
+    0.299 * r as f32 + 0.587 * g as f32 + 0.114 * b as f32
+}
+
 fn main() -> Result<(), ImageError>{
     let args: DitherArgs = argh::from_env();
 
@@ -64,24 +72,15 @@ fn main() -> Result<(), ImageError>{
 
     let mut pixelblanc = false;
 
-    for (x, y, pixel) in rgb_image.enumerate_pixels_mut() {
-        if pixelblanc {
-            // passer le pixel en blanc en utilisant le rgb(255, 255, 255)
-            pixel.0[0] = 255;
-            pixel.0[1] = 255;
-            pixel.0[2] = 255;
-            pixelblanc = false;
-        } else {
-            pixelblanc = true;
-        }
-    }
-
     // Afficher dans le terminal la couleur du pixel (32, 52) de l’image
     let pixel = rgb_image.get_pixel(32, 52);
     println!("Pixel (32, 52) : {:?}", pixel);
 
+    // Calculer la luminosité du pixel
+    let luminosity = luminosity_of_pixel(*pixel);
+    println!("La luminosité du pixel (100, 100) est : {}", luminosity);
+
     rgb_image.save(&path_out).unwrap();
-    
     
     //
     Ok(())
