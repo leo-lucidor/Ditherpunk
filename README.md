@@ -181,3 +181,62 @@ Distance maximale (√(255² + 255² + 255²)) :
 
     distance maximale=(255−0)2+(255−0)2+(255−0)2
     distance maximale=2552+2552+2552=3×2552≈3×65025≈195075≈441.67
+
+--- 
+
+### Question 10 - Implémenter le traitement
+
+#### 1. Définition de la palette
+
+La palette utilisée dans ce cas est un ensemble de couleurs prédéfinies. Chaque couleur est représentée par une valeur RGB (Rouge, Vert, Bleu). Voici un exemple de palette avec 9 couleurs :
+
+```rust
+const PALETTE: [Rgb<u8>; 8] = [
+    BLACK, WHITE, BLUE, RED, GREEN, YELLOW, MAGENTA, CYAN
+];
+```
+
+#### 2. Calculer la distance entre un pixel et chaque couleur de la palette
+
+    Pour déterminer quelle couleur de la palette est la plus proche d’un pixel, nous utilisons la distance euclidienne dans l’espace RGB. Nous utilisons donc la fonction **"color_distance"** précèdement crée.
+
+#### 3. Remplacer le pixel par la couleur la plus proche dans la palette
+
+    Chaque pixel de l’image est comparé à toutes les couleurs de la palette pour déterminer laquelle est la plus proche en termes de distance. Une fois cette couleur identifiée, elle remplace la couleur originale du pixel.
+
+Voici les fonctions créent pour appliquer cette transformation sur une image :
+
+```rust
+fn to_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let closest_color = find_closest_color(*pixel, palette);
+            image.put_pixel(x, y, closest_color);
+        }
+    }
+}
+
+fn find_closest_color(pixel: Rgb<u8>, palette: &[Rgb<u8>]) -> Rgb<u8> {
+    let mut min_distance = f32::MAX;
+    let mut closest_color = palette[0];
+
+    for &color in palette {
+        let distance = color_distance(pixel, color);
+        if distance < min_distance {
+            min_distance = distance;
+            closest_color = color;
+        }
+    }
+
+    closest_color
+}
+```
+
+Lorsqu'on applique cette méthode, chaque pixel de l’image originale est remplacé par la couleur de la palette qui lui est la plus proche. Par exemple :
+
+    Un gris clair dans l’image peut être remplacé par le GREY (127,127,127)(127,127,127).
+    Une teinte bleu ciel peut être remplacée par le CYAN (0,255,255)(0,255,255).
+
+--- 
+
