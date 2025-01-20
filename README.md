@@ -399,20 +399,34 @@ Ce qui donne directement :
 
 Nous avons pu créée la fonction generate_bayer_matrix génère récursivement une matrice de Bayer d'ordre nn, utilisée pour le "ordered dithering".
 
-Elle commence avec une matrice de base B0=[[0]]B0​=[[0]]. À chaque ordre supérieur, la matrice est agrandie en divisant l'espace en 4 quadrants, chacun calculé selon la formule donnée :
+Elle commence avec une matrice de base B0=[[0]]. À chaque ordre supérieur, la matrice est agrandie en divisant l'espace en 4 quadrants, chacun calculé selon la formule donnée :
 
     4×Bn4×Bn​
-    4×Bn+2×Un4×Bn​+2×Un​
-    4×Bn+3×Un4×Bn​+3×Un​
-    4×Bn+Un4×Bn​+Un​
+    4×Bn+2×Un
+    4×Bn+3×Un
+    4×Bn+Un
 
-où UnUn​ est une matrice remplie de 1.
+où Un​ est une matrice remplie de 1.
 
-La fonction combine ces quadrants dans une nouvelle matrice de taille 2n×2n2n×2n, en suivant une approche récursive. Cela permet de construire des matrices d'ordre arbitraire de manière efficace, tout en respectant la définition mathématique.
+La fonction combine ces quadrants dans une nouvelle matrice de taille 2n×2n, en suivant une approche récursive. Cela permet de construire des matrices d'ordre arbitraire de manière efficace, tout en respectant la définition mathématique.
 
 ![alt text](./ditherpunk/rapport/B3.png)
 
+---
+
 ### Question 14 - Quel type de données utiliser pour représenter la matrice de Bayer? Comment créer une matrice de Bayer d’ordre arbitraire?
+
+Pour représenter la matrice de Bayer, un tableau 2D (comme un vecteur de vecteurs de 32bits en Rust) est adapté. Voici pourquoi :
+
+    Structure simple : La matrice est carrée (2n×2n) et ses éléments sont des entiers.
+    Facilité d'accès : Un tableau 2D permet un accès direct à M[i][j]
+
+Pour générer une matrice d'ordre arbitraire, une fonction récursive est idéale. Voici l'algorithme :
+
+    Cas de base : B0=[[0]]
+    Construction :
+        Calculer 4Bn​, 4Bn+3, 4Bn+2, 4Bn+1.
+        Assembler les blocs dans une nouvelle matrice
 
 ---
 
