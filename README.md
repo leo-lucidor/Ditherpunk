@@ -588,7 +588,7 @@ let new_value = if old_value > 0.5 { 1.0 } else { 0.0 };
 let error = old_value - new_value;
 ```
 
-#### Étape 4 : Diffusion de l'erreur aux voisins
+#### Étape 4 : Diffusion de l'erreur aux voisins
 
 Selon la matrice donnée (* 0.5 / 0.5 0), l'erreur est répartie sur les pixels adjacents :
 
@@ -620,6 +620,27 @@ if new_value == 1.0 {
 ---
 
 ### Question 17 - Pour une palette de couleurs comme dans la partie 3, expliquer dans votre README comment vous représentez l’erreur commise à chaque pixel, comment vous la diffusez
+
+Lorsque nous utilisons une palette de couleurs au lieu d'une simple conversion en noir et blanc, la gestion de l'erreur devient plus complexe. L'erreur commise lors de l'approximation de la couleur d'un pixel est alors représentée par un vecteur contenant les différences pour chacune des trois composantes de couleur : rouge (R), vert (G) et bleu (B).
+
+#### Étape 1 : Représentation de l'erreur
+
+L'erreur pour un pixel est définie comme la différence entre sa couleur d'origine et la couleur choisie dans la palette. Cela signifie qu'au lieu d'une simple valeur de luminosité, l'erreur est un vecteur contenant trois valeurs : l'erreur pour le rouge, le vert et le bleu. Ces erreurs traduisent combien la couleur finale du pixel s'éloigne de la couleur réelle.
+
+#### Étape 2 : Diffusion de l'erreur
+
+Une fois l'erreur calculée, elle est répartie entre les pixels voisins non traités. Cette diffusion est effectuée à l'aide d'une matrice qui détermine quelle proportion de l'erreur est attribuée à chaque voisin. Par 
+
+exemple, si on utilise une matrice simple :
+
+    [ ∗  0.50]
+    [0.5 ​0.50​]
+
+Cela signifie que 50 % de l'erreur est transférée au pixel situé à droite et 50 % au pixel situé en dessous. Chaque composante de l'erreur (R, G, B) est propagée de manière indépendante selon cette matrice.
+
+#### Étape 3 : Correction des pixels
+
+Avant de quantifier la couleur d'un pixel suivant la palette, on prend en compte l'erreur accumulée provenant des pixels précédents. Cela permet d'ajuster la couleur du pixel pour compenser les approximations faites plus tôt. Cette méthode assure une meilleure continuité entre les couleurs et réduit les artefacts visuels.
 
 ---
 
