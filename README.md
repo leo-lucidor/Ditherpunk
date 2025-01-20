@@ -12,11 +12,19 @@
 
 Pour utiliser le mode seuil avec une image d'entrée et une sortie spécifiée, il faut exécuter cette commande :
 
-```rs
-cargo run -- img/IUT.jpg img/IUT_OUT.png seuil
-```
+`cargo run -- img/IUT.jpg img/IUT_OUT.png seuil`
+
+On peux voir ci-dessous que la sortie des deux image est identique.
+
+
+IUT.jpg            |  IUT_OUT.png
+:-------------------------:|:-------------------------:
+![](./rapport/q2/IUT.jpg)  |  ![](./rapport/q2/IUT_OUT.png)
+
 
 ---
+
+
 
 ### Question 3 - Sauver l’image obtenue au format png. Que se passe-t-il si l’image de départ avait un canal alpha?
 
@@ -30,6 +38,13 @@ cargo run -- img/IUT.jpg img/IUT_OUT.png seuil
 
 - Pour afficher la couleur du pixel (32, 52) d'une image. Il nous faut utiliser la fonction "get_pixel()" avec les coordonnées "32, 52".
 - Il nous faut ensuite exectuter "println!("Pixel (32, 52) : {:?}", pixel);" pour afficher la couleur en RGB du Pixel.
+
+
+commande : `cargo run -- img/IUT.jpg img/IUT_OUT.png seuil`
+
+    
+    ![](./rapport/q4/Capture%20d’écran_2025-01-20_18-13-28.png) 
+
 
 ---
 
@@ -62,6 +77,12 @@ for (x, y, pixel) in rgb_image.enumerate_pixels_mut() {
 ```
 
 - Grâce à la haute résolution de l'image utilisé, l'image obtenue reste bien reconnaissable malgré cette transformation.
+
+IUT.jpg            |  IUT_OUT.png
+:-------------------------:|:-------------------------:
+![](./rapport/q5/IUT.jpg)  |  ![](./rapport/q5/IUT_OUT.png)
+
+
 
 ---
 
@@ -114,6 +135,10 @@ fn to_monochrome(image: &mut RgbImage) {
 ```
 - La fonction **to_monochrome** convertit une image couleur en une image monochrome (noir et blanc) en remplaçant chaque pixel par du blanc ou du noir en fonction de sa luminosité.
 
+IUT.jpg            |  IUT_OUT.png
+:-------------------------:|:-------------------------:
+![](./rapport/q7/IUT.jpg)  |  ![](./rapport/q7/IUT_OUT.png)
+
 ---
 
 ### Question 8 - Permettre à l’utilisateurice de remplacer “noir” et “blanc” par une paire de couleurs au choix
@@ -138,9 +163,14 @@ fn to_pair_colors(image: &mut RgbImage, color_low: Rgb<u8>, color_high: Rgb<u8>)
         }
     }
 }
+
 ```
 
 - Cette fonction remplace les pixels de l'image par une paire de couleurs en fonction de la luminosité des pixels. Les utilisateurs peuvent choisir librement les couleurs pour les zones sombres et claires.
+
+IUT.jpg            |  IUT_OUT.png
+:-------------------------:|:-------------------------:
+![](./rapport/q8/IUT.jpg)  |  ![](./rapport/q8/IUT_OUT.png)
 
 ---
 
@@ -238,6 +268,12 @@ Lorsqu'on applique cette méthode, chaque pixel de l’image originale est rempl
     Un gris clair dans l’image peut être remplacé par le GREY (127,127,127)(127,127,127).
     Une teinte bleu ciel peut être remplacée par le CYAN (0,255,255)(0,255,255).
 
+
+
+IUT.jpg            |  IUT_OUT.png
+:-------------------------:|:-------------------------:
+![](./rapport/q10/IUT.jpg)  |  ![](./rapport/q10/IUT_OUT.png)
+
 --- 
 
 ### Question 11 - Votre application doit se comporter correctement si on donne une palette vide. Vous expliquerez dans votre README le choix que vous avez fait dans ce cas
@@ -308,6 +344,10 @@ fn random_dithering(image: &mut RgbImage) {
     }
 }
 ```
+
+IUT.jpg            |  IUT_OUT.png
+:-------------------------:|:-------------------------:
+![](./rapport/q12/IUT.jpg)  |  ![](./rapport/q12/IUT_OUT.png)
 
 ---
 
