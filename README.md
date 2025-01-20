@@ -416,6 +416,18 @@ La fonction combine ces quadrants dans une nouvelle matrice de taille 2n×2n, en
 
 ### Question 14 - Quel type de données utiliser pour représenter la matrice de Bayer? Comment créer une matrice de Bayer d’ordre arbitraire?
 
+Pour représenter la matrice de Bayer, un tableau 2D (comme un vecteur de vecteurs de 32bits en Rust) est adapté. Voici pourquoi :
+
+    Structure simple : La matrice est carrée (2n×2n) et ses éléments sont des entiers.
+    Facilité d'accès : Un tableau 2D permet un accès direct à M[i][j]
+
+Pour générer une matrice d'ordre arbitraire, une fonction récursive est idéale. Voici l'algorithme :
+
+    Cas de base : B0=[[0]]
+    Construction :
+        Calculer 4Bn​, 4Bn+3, 4Bn+2, 4Bn+1.
+        Assembler les blocs dans une nouvelle matrice
+
 ---
 
 ### Question 15 - Implémenter le tramage par matrice de Bayer
