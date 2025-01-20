@@ -198,6 +198,29 @@ fn generate_bayer_matrix(order: usize) -> Vec<Vec<u32>> {
 }
 // ---------------------------------------------------------
 
+// Question 15
+fn bayer_dithering(image: &mut RgbImage, bayer_matrix: &[Vec<u32>]) {
+    let matrix_size = bayer_matrix.len() as u32;
+
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let luminosity = luminosity_of_pixel(*pixel);
+
+            // Récupérer le seuil de la matrice (en répétant la matrice)
+            let threshold = bayer_matrix[(y % matrix_size) as usize][(x % matrix_size) as usize] as f32;
+
+            // Appliquer le seuil (normalisé à 255)
+            if luminosity > (threshold / (matrix_size * matrix_size) as f32) * 255.0 {
+                image.put_pixel(x, y, WHITE);
+            } else {
+                image.put_pixel(x, y, BLACK);
+            }
+        }
+    }
+}
+// ---------------------------------------------------------
+
 fn main() -> Result<(), ImageError>{
     // let args: DitherArgs = argh::from_env();
 
