@@ -262,6 +262,70 @@ fn error_diffusion(image: &mut RgbImage) {
 }
 // ---------------------------------------------------------
 
+// Question 18 
+fn error_diffusion_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
+    let width = image.width() as i32;
+    let height = image.height() as i32;
+
+    // Parcours des pixels
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(x as u32, y as u32);
+            let original_color = [
+                pixel[0] as f32,
+                pixel[1] as f32,
+                pixel[2] as f32,
+            ];
+
+            // Trouver la couleur la plus proche dans la palette
+            let closest_color = find_closest_color(original_color, palette);
+
+            // Appliquer la couleur la plus proche au pixel
+            image.put_pixel(x as u32, y as u32, closest_color);
+
+            // Calculer l'erreur (différence entre l'original et la couleur choisie)
+            let error = [
+                original_color[0] - closest_color[0] as f32,
+                original_color[1] - closest_color[1] as f32,
+                original_color[2] - closest_color[2] as f32,
+            ];
+
+            // Diffuser l'erreur aux pixels voisins
+            if x + 1 < width {
+                distribute_error(image, x + 1, y, error, [0.5, 0.5, 0.5]);
+            }
+            if y + 1 < height {
+                distribute_error(image, x, y + 1, error, [0.5, 0.5, 0.5]);
+            }
+        }
+    }
+}
+
+// Fonction pour trouver la couleur la plus proche dans la palette
+fn find_closest_color(original_color: [f32; 3], palette: &[Rgb<u8>]) -> Rgb<u8> {
+    palette
+        .iter()
+        .min_by_key(|color| {
+            let distance = (original_color[0] - color[0] as f32).powi(2)
+                + (original_color[1] - color[1] as f32).powi(2)
+                + (original_color[2] - color[2] as f32).powi(2);
+            (distance * 1000.0) as u32
+        })
+        .unwrap()
+        .to_owned()
+}
+
+// Fonction pour distribuer l'erreur à un pixel voisin
+fn distribute_error(image: &mut RgbImage, x: i32, y: i32, error: [f32; 3], coefficients: [f32; 3]) {
+    let pixel = image.get_pixel_mut(x as u32, y as u32);
+
+    for i in 0..3 {
+        let new_value = (pixel[i] as f32 + error[i] * coefficients[i]).clamp(0.0, 255.0);
+        pixel[i] = new_value as u8;
+    }
+}
+// ---------------------------------------------------------
+
 fn main() -> Result<(), ImageError> {
     let args: DitherArgs = argh::from_env();
 
@@ -270,16 +334,28 @@ fn main() -> Result<(), ImageError> {
 
     // Ouvrir l'image
     let mut img: DynamicImage = open(path_in)?;
-
     let mut rgb_image = img.to_rgb8();
 
-    // Appliquer la diffusion d'erreur
-    error_diffusion(&mut rgb_image);
+    // Définir une palette de couleurs (exemple avec 8 couleurs)
+    let palette = vec![
+        Rgb([0, 0, 0]),    // Noir
+        Rgb([255, 255, 255]), // Blanc
+        Rgb([255, 0, 0]),  // Rouge
+        Rgb([0, 255, 0]),  // Vert
+        Rgb([0, 0, 255]),  // Bleu
+        Rgb([255, 255, 0]), // Jaune
+        Rgb([0, 255, 255]), // Cyan
+        Rgb([255, 0, 255]), // Magenta
+    ];
+
+    // Appliquer la diffusion d'erreur avec la palette définie
+    error_diffusion_palette(&mut rgb_image, &palette);
 
     // Sauvegarder l'image résultante
     rgb_image.save(&path_out).unwrap();
 
-    println!("Image tramée par matrice de Bayer sauvegardée dans {}", path_out);
+    println!("Image palettisée avec diffusion d'erreur sauvegardée dans {}", path_out);
 
     Ok(())
 }
+

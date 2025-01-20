@@ -646,6 +646,88 @@ Avant de quantifier la couleur d'un pixel suivant la palette, on prend en compte
 
 ### Question 18 - Implémenter la diffusion d’erreur pour la palettisation d’images
 
+Nous avons implémentaté la fonction de diffusion d'erreur pour la palettisation d'images, en tenant compte des trois composantes de couleur (R, G, B). La fonction utilise une matrice simple pour répartir l'erreur entre les pixels voisins :
+
+```rust
+use image::{DynamicImage, RgbImage, Rgb};
+
+fn error_diffusion_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
+    let width = image.width() as i32;
+    let height = image.height() as i32;
+
+    // Parcours des pixels
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(x as u32, y as u32);
+            let original_color = [
+                pixel[0] as f32,
+                pixel[1] as f32,
+                pixel[2] as f32,
+            ];
+
+            // Trouver la couleur la plus proche dans la palette
+            let closest_color = find_closest_color(original_color, palette);
+
+            // Appliquer la couleur la plus proche au pixel
+            image.put_pixel(x as u32, y as u32, closest_color);
+
+            // Calculer l'erreur (différence entre l'original et la couleur choisie)
+            let error = [
+                original_color[0] - closest_color[0] as f32,
+                original_color[1] - closest_color[1] as f32,
+                original_color[2] - closest_color[2] as f32,
+            ];
+
+            // Diffuser l'erreur aux pixels voisins
+            if x + 1 < width {
+                distribute_error(image, x + 1, y, error, [0.5, 0.5, 0.5]);
+            }
+            if y + 1 < height {
+                distribute_error(image, x, y + 1, error, [0.5, 0.5, 0.5]);
+            }
+        }
+    }
+}
+```
+
+Nous avons implémentaté la fonction qui permet de trouver la couleur la plus proche, dans la palette de couleurs données :
+
+```rust
+// Fonction pour trouver la couleur la plus proche dans la palette
+fn find_closest_color(original_color: [f32; 3], palette: &[Rgb<u8>]) -> Rgb<u8> {
+    palette
+        .iter()
+        .min_by_key(|color| {
+            let distance = (original_color[0] - color[0] as f32).powi(2)
+                + (original_color[1] - color[1] as f32).powi(2)
+                + (original_color[2] - color[2] as f32).powi(2);
+            (distance * 1000.0) as u32
+        })
+        .unwrap()
+        .to_owned()
+}
+```
+
+Nous avons implémentaté la fonction permettant de distribuer l'erreur à un pixel voisin :
+
+```rust
+// Fonction pour distribuer l'erreur à un pixel voisin
+fn distribute_error(image: &mut RgbImage, x: i32, y: i32, error: [f32; 3], coefficients: [f32; 3]) {
+    let pixel = image.get_pixel_mut(x as u32, y as u32);
+
+    for i in 0..3 {
+        let new_value = (pixel[i] as f32 + error[i] * coefficients[i]).clamp(0.0, 255.0);
+        pixel[i] = new_value as u8;
+    }
+}
+```
+
+Palette : La fonction accepte une liste de couleurs représentant la palette. Chaque pixel sera quantifié à la couleur la plus proche de cette palette.
+
+Erreur : L'erreur est calculée comme la différence entre les composantes de la couleur originale et celles de la couleur la plus proche.
+
+Diffusion : L'erreur est distribuée aux pixels voisins selon les coefficients de diffusion. Dans cet exemple, 50 % de l'erreur est envoyée au pixel de droite et 50 % au pixel en dessous.
+
 ---
 
 ### Question 19 - Implémenter la diffusion d’erreur pour la matrice de Floyd-Steinberg
