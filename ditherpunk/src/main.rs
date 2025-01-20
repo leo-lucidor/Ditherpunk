@@ -221,6 +221,47 @@ fn bayer_dithering(image: &mut RgbImage, bayer_matrix: &[Vec<u32>]) {
 }
 // ---------------------------------------------------------
 
+// Question 16
+fn error_diffusion(image: &mut RgbImage) {
+    let width = image.width() as i32;
+    let height = image.height() as i32;
+
+    // Convertir l'image en niveaux de gris
+    let mut grayscale_image: Vec<Vec<f32>> = vec![vec![0.0; width as usize]; height as usize];
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(x as u32, y as u32);
+            grayscale_image[y as usize][x as usize] = luminosity_of_pixel(*pixel) / 255.0; // Normaliser à [0, 1]
+        }
+    }
+
+    for y in 0..height {
+        for x in 0..width {
+            // Récupérer la valeur actuelle
+            let old_value = grayscale_image[y as usize][x as usize];
+
+            // Quantification : remplace par noir (0.0) ou blanc (1.0)
+            let new_value = if old_value > 0.5 { 1.0 } else { 0.0 };
+
+            // Appliquer la nouvelle valeur au pixel
+            let color = if new_value == 1.0 { WHITE } else { BLACK };
+            image.put_pixel(x as u32, y as u32, color);
+
+            // Calculer l'erreur
+            let error = old_value - new_value;
+
+            // Diffuser l'erreur aux pixels voisins
+            if x + 1 < width {
+                grayscale_image[y as usize][(x + 1) as usize] += error * 0.5; // Pixel à droite
+            }
+            if y + 1 < height {
+                grayscale_image[(y + 1) as usize][x as usize] += error * 0.5; // Pixel en dessous
+            }
+        }
+    }
+}
+// ---------------------------------------------------------
+
 fn main() -> Result<(), ImageError> {
     let args: DitherArgs = argh::from_env();
 
@@ -232,21 +273,8 @@ fn main() -> Result<(), ImageError> {
 
     let mut rgb_image = img.to_rgb8();
 
-    // Calculer B3 ou une matrice de Bayer d'ordre donné
-    let bayer_order = 3; // Vous pouvez ajuster cet ordre
-    let bayer_matrix = generate_bayer_matrix(bayer_order);
-
-    // Affichage de la matrice de Bayer générée (optionnel)
-    println!("Matrice de Bayer d'ordre {} :", bayer_order);
-    for row in &bayer_matrix {
-        for value in row {
-            print!("{:>3} ", value);
-        }
-        println!();
-    }
-
-    // Appliquer le tramage par matrice de Bayer
-    bayer_dithering(&mut rgb_image, &bayer_matrix);
+    // Appliquer la diffusion d'erreur
+    error_diffusion(&mut rgb_image);
 
     // Sauvegarder l'image résultante
     rgb_image.save(&path_out).unwrap();
