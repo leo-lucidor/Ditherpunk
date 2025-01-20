@@ -311,4 +311,111 @@ fn random_dithering(image: &mut RgbImage) {
 
 ---
 
+### Question 13 - Déterminer 𝐵3
 
+#### Définition de la matrice de Bayer 
+
+    La matrice de Bayer d'ordre 0 est donnée comme :
+
+    B0​=[0​]
+
+    La matrice de Bayer d'ordre n+1 est obtenue par :
+    Bn+1=(1/4)*[4Bn     4Bn+3Un
+                4Bn+2Un 4Bn+Un]
+
+
+    où Un​ est une matrice de taille 2n×2n dont tous les éléments valent 1
+
+
+#### Calcul pas à pas 
+
+La matrice B3​ peut être calculée de manière récursive à partir de B2​. 
+Voici les étapes :
+
+    B2=(1/16)*[0   8  2 10
+               12  4 14  6
+               3  11  1  9
+               15  7 13  5]
+​
+U2​ est une matrice 4×4 de 1 :
+
+    U2=[1 1 1 1
+        1 1 1 1
+        1 1 1 1
+        1 1 1 1]
+
+​
+Calcul de 4B2,4B2+3U2,4B2+2U2,4B2+U2
+
+Chaque élément de B2 est multiplié par 4, puis on ajoute 3,2, ou 1 selon le cas pour les blocs.
+
+    4B2 : ​
+
+    4B2=[0  32  8 40
+         48 16 56 24
+         12 44  4 36
+         60 28 52 20]
+
+    4B2+3U2 :
+
+    4B2+3U2=[3  35 11 43
+             51 19 59 27
+             15 47  7 39
+             63 31 55 23]
+
+    4B2+2U2 :
+
+    4B2+2U2=[2  34 10 42
+             50 18 58 26
+             14 46  6 38
+             62 30 54 22]
+
+    4B2+1U2 :
+
+    4B2+U2=[1  33  9 41
+            49 17 57 25
+            13 45 5  37
+            61 29 53 21]
+
+Assemblage de B3
+
+On assemble les blocs pour obtenir B3​ :
+
+    B3=(1/64)*[4B2      4B2+3U2
+               4B2+2U2  4B2+U2]
+
+Ce qui donne directement :
+
+    B3=[0  32  8 40  2 34 10 42 
+        48 16 56 24 50 18 58 26 
+        12 44  4 36 14 46  6 38 
+        60 28 52 20 62 30 54 22 
+         3 35 11 43  1 33  9 41
+        51 19 59 27 49 17 57 25
+        15 47  7 39 13 45  5 37
+        63 31 55 23 61 29 53 21]
+
+--- 
+
+Nous avons pu créée la fonction generate_bayer_matrix génère récursivement une matrice de Bayer d'ordre nn, utilisée pour le "ordered dithering".
+
+Elle commence avec une matrice de base B0=[[0]]B0​=[[0]]. À chaque ordre supérieur, la matrice est agrandie en divisant l'espace en 4 quadrants, chacun calculé selon la formule donnée :
+
+    4×Bn4×Bn​
+    4×Bn+2×Un4×Bn​+2×Un​
+    4×Bn+3×Un4×Bn​+3×Un​
+    4×Bn+Un4×Bn​+Un​
+
+où UnUn​ est une matrice remplie de 1.
+
+La fonction combine ces quadrants dans une nouvelle matrice de taille 2n×2n2n×2n, en suivant une approche récursive. Cela permet de construire des matrices d'ordre arbitraire de manière efficace, tout en respectant la définition mathématique.
+
+![alt text](./ditherpunk/rapport/B3.png)
+
+### Question 14 - Quel type de données utiliser pour représenter la matrice de Bayer? Comment créer une matrice de Bayer d’ordre arbitraire?
+
+---
+
+### Question 15 - Implémenter le tramage par matrice de Bayer
+
+​

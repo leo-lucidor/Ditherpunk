@@ -163,35 +163,82 @@ fn random_dithering(image: &mut RgbImage) {
 }
 // ---------------------------------------------------------
 
+// Question 13
+fn generate_bayer_matrix(order: usize) -> Vec<Vec<u32>> {
+    if order == 0 {
+        // Cas de base : B0 = [[0]]
+        return vec![vec![0]];
+    }
+
+    // Matrice de l'ordre précédent
+    let prev_matrix = generate_bayer_matrix(order - 1);
+    let size = prev_matrix.len(); // Taille de la matrice précédente (2^n)
+    let new_size = size * 2; // Nouvelle taille (2^(n+1))
+
+    // Matrice Un (remplie de 1)
+    let un_matrix = vec![vec![1; size]; size];
+
+    // Initialisation de la nouvelle matrice de Bayer
+    let mut matrix = vec![vec![0; new_size]; new_size];
+
+    // Construction des 4 quadrants selon la formule :
+    // 1/4 * (4*Bn               4*Bn + 2*Un
+    //        4*Bn + 3*Un        4*Bn + Un)
+    for i in 0..size {
+        for j in 0..size {
+            let bn = prev_matrix[i][j];
+            let un = un_matrix[i][j];
+            matrix[i][j] = 4 * bn;                     // 4*Bn
+            matrix[i][j + size] = 4 * bn + 2 * un;     // 4*Bn + 2*Un
+            matrix[i + size][j] = 4 * bn + 3 * un;     // 4*Bn + 3*Un
+            matrix[i + size][j + size] = 4 * bn + un;  // 4*Bn + Un
+        }
+    }
+    matrix
+}
+// ---------------------------------------------------------
+
 fn main() -> Result<(), ImageError>{
-    let args: DitherArgs = argh::from_env();
+    // let args: DitherArgs = argh::from_env();
 
-    let path_in = args.input;
-    let path_out = args.output.unwrap_or("./img/IUT_OUT.png".to_string());
+    // let path_in = args.input;
+    // let path_out = args.output.unwrap_or("./img/IUT_OUT.png".to_string());
 
-    // Ouvrir l'image
-    let mut img: DynamicImage = open(path_in)?;
+    // // Ouvrir l'image
+    // let mut img: DynamicImage = open(path_in)?;
 
-    let mut rgb_image = img.to_rgb8();
+    // let mut rgb_image = img.to_rgb8();
 
-    let mut pixelblanc = false;
+    // let mut pixelblanc = false;
 
-    // Afficher dans le terminal la couleur du pixel (32, 52) de l’image
-    let pixel = rgb_image.get_pixel(32, 52);
-    println!("Pixel (32, 52) : {:?}", pixel);
+    // // Afficher dans le terminal la couleur du pixel (32, 52) de l’image
+    // let pixel = rgb_image.get_pixel(32, 52);
+    // println!("Pixel (32, 52) : {:?}", pixel);
 
-    // Calculer la luminosité du pixel
-    let luminosity = luminosity_of_pixel(*pixel);
-    println!("La luminosité du pixel (100, 100) est : {}", luminosity);
+    // // Calculer la luminosité du pixel
+    // let luminosity = luminosity_of_pixel(*pixel);
+    // println!("La luminosité du pixel (100, 100) est : {}", luminosity);
 
-    // Appliquer le tramage aléatoire
-    random_dithering(&mut rgb_image);
+    // // Appliquer le tramage aléatoire
+    // random_dithering(&mut rgb_image);
 
-    // Appliquer le traitement de distance entre deux couleurs
-    let distance = color_distance(BLACK, BLACK);
-    println!("La distance entre rouge et bleu est : {}", distance);
+    // // Appliquer le traitement de distance entre deux couleurs
+    // let distance = color_distance(BLACK, BLACK);
+    // println!("La distance entre rouge et bleu est : {}", distance);
 
-    rgb_image.save(&path_out).unwrap();
+    // rgb_image.save(&path_out).unwrap();
+
+    // Calculer B3
+    let b3 = generate_bayer_matrix(3);
+
+    // Affichage de la matrice B3
+    println!("Matrice B3 :");
+    for row in b3 {
+        for value in row {
+            print!("{:>3} ", value);
+        }
+        println!();
+    }
     
     //
     Ok(())
