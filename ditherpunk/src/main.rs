@@ -198,48 +198,60 @@ fn generate_bayer_matrix(order: usize) -> Vec<Vec<u32>> {
 }
 // ---------------------------------------------------------
 
-fn main() -> Result<(), ImageError>{
-    // let args: DitherArgs = argh::from_env();
+// Question 15
+fn bayer_dithering(image: &mut RgbImage, bayer_matrix: &[Vec<u32>]) {
+    let matrix_size = bayer_matrix.len() as u32;
 
-    // let path_in = args.input;
-    // let path_out = args.output.unwrap_or("./img/IUT_OUT.png".to_string());
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let luminosity = luminosity_of_pixel(*pixel);
 
-    // // Ouvrir l'image
-    // let mut img: DynamicImage = open(path_in)?;
+            // Récupérer le seuil de la matrice (en répétant la matrice)
+            let threshold = bayer_matrix[(y % matrix_size) as usize][(x % matrix_size) as usize] as f32;
 
-    // let mut rgb_image = img.to_rgb8();
+            // Appliquer le seuil (normalisé à 255)
+            if luminosity > (threshold / (matrix_size * matrix_size) as f32) * 255.0 {
+                image.put_pixel(x, y, WHITE);
+            } else {
+                image.put_pixel(x, y, BLACK);
+            }
+        }
+    }
+}
+// ---------------------------------------------------------
 
-    // let mut pixelblanc = false;
+fn main() -> Result<(), ImageError> {
+    let args: DitherArgs = argh::from_env();
 
-    // // Afficher dans le terminal la couleur du pixel (32, 52) de l’image
-    // let pixel = rgb_image.get_pixel(32, 52);
-    // println!("Pixel (32, 52) : {:?}", pixel);
+    let path_in = args.input;
+    let path_out = args.output.unwrap_or("./img/IUT_OUT.png".to_string());
 
-    // // Calculer la luminosité du pixel
-    // let luminosity = luminosity_of_pixel(*pixel);
-    // println!("La luminosité du pixel (100, 100) est : {}", luminosity);
+    // Ouvrir l'image
+    let mut img: DynamicImage = open(path_in)?;
 
-    // // Appliquer le tramage aléatoire
-    // random_dithering(&mut rgb_image);
+    let mut rgb_image = img.to_rgb8();
 
-    // // Appliquer le traitement de distance entre deux couleurs
-    // let distance = color_distance(BLACK, BLACK);
-    // println!("La distance entre rouge et bleu est : {}", distance);
+    // Calculer B3 ou une matrice de Bayer d'ordre donné
+    let bayer_order = 3; // Vous pouvez ajuster cet ordre
+    let bayer_matrix = generate_bayer_matrix(bayer_order);
 
-    // rgb_image.save(&path_out).unwrap();
-
-    // Calculer B3
-    let b3 = generate_bayer_matrix(3);
-
-    // Affichage de la matrice B3
-    println!("Matrice B3 :");
-    for row in b3 {
+    // Affichage de la matrice de Bayer générée (optionnel)
+    println!("Matrice de Bayer d'ordre {} :", bayer_order);
+    for row in &bayer_matrix {
         for value in row {
             print!("{:>3} ", value);
         }
         println!();
     }
-    
-    //
+
+    // Appliquer le tramage par matrice de Bayer
+    bayer_dithering(&mut rgb_image, &bayer_matrix);
+
+    // Sauvegarder l'image résultante
+    rgb_image.save(&path_out).unwrap();
+
+    println!("Image tramée par matrice de Bayer sauvegardée dans {}", path_out);
+
     Ok(())
 }

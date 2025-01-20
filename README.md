@@ -432,4 +432,112 @@ Pour générer une matrice d'ordre arbitraire, une fonction récursive est idéa
 
 ### Question 15 - Implémenter le tramage par matrice de Bayer
 
-​
+```rust
+fn bayer_dithering(image: &mut RgbImage, bayer_matrix: &[Vec<u32>]) {
+    let matrix_size = bayer_matrix.len() as u32;
+
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let luminosity = luminosity_of_pixel(*pixel);
+
+            // Récupérer le seuil de la matrice (en répétant la matrice)
+            let threshold = bayer_matrix[(y % matrix_size) as usize][(x % matrix_size) as usize] as f32;
+
+            // Appliquer le seuil (normalisé à 255)
+            if luminosity > (threshold / (matrix_size * matrix_size) as f32) * 255.0 {
+                image.put_pixel(x, y, WHITE);
+            } else {
+                image.put_pixel(x, y, BLACK);
+            }
+        }
+    }
+}
+```
+
+La fonction "bayer_dithering" permet d'appliquer un tramage ordonné à une image en utilisant une matrice de Bayer pour déterminer les seuils de conversion de chaque pixel en noir ou blanc. Voici les étapes principales :
+
+#### Taille de la matrice de Bayer :
+
+``` rust
+let matrix_size = bayer_matrix.len() as u32;
+```
+
+    Cette variable récupère la taille de la matrice de Bayer (assumée carrée). Elle est utilisée pour gérer la répétition de la matrice sur l'image.
+
+#### Parcours de l'image pixel par pixel :
+
+```rust
+for y in 0..image.height() {
+    for x in 0..image.width() {
+```
+
+    La fonction parcourt chaque pixel de l'image pour appliquer la transformation.
+
+#### Calcul de la luminosité du pixel :
+
+```rust
+let luminosity = luminosity_of_pixel(*pixel);
+```
+
+    La luminosité est extraite pour déterminer si le pixel doit être remplacé par du noir ou du blanc.
+
+#### Répétition de la matrice de Bayer :
+
+```rust
+let threshold = bayer_matrix[(y % matrix_size) as usize][(x % matrix_size) as usize] as f32;
+```
+
+    La matrice de Bayer est répétée sur l'image à l'aide des opérations modulo (%). Cela permet de couvrir une image de taille arbitraire en "mosaïquant" la matrice de Bayer.
+
+#### Normalisation du seuil :
+
+```rust
+if luminosity > (threshold / (matrix_size * matrix_size) as f32) * 255.0 {
+```
+
+    Les valeurs dans la matrice de Bayer sont normalisées par rapport à la plage de valeurs des pixels (0 à 255). Cela garantit que les seuils de Bayer, initialement entre 0 et 2n−1, correspondent à des seuils dans l'échelle de la luminosité.
+
+#### Application du tramage :
+
+```rust
+if luminosity > normalized_threshold {
+    image.put_pixel(x, y, WHITE);
+} else {
+    image.put_pixel(x, y, BLACK);
+}
+```
+
+    Le pixel est remplacé par du blanc si sa luminosité dépasse le seuil correspondant de la matrice de Bayer, sinon par du noir. Cela crée un effet de tramage visuellement ordonné.
+
+---
+
+### Question 16 - Implémenter un mécanisme de diffusion d’erreur
+
+---
+
+### Question 17 - Pour une palette de couleurs comme dans la partie 3, expliquer dans votre README comment vous représentez l’erreur commise à chaque pixel, comment vous la diffusez
+
+---
+
+### Question 18 - Implémenter la diffusion d’erreur pour la palettisation d’images
+
+---
+
+### Question 19 - Implémenter la diffusion d’erreur pour la matrice de Floyd-Steinberg
+
+---
+
+### Question 20 - Comment représenter une matrice de diffusion d’erreur arbitraire? Permettre de changer de matrice de diffusion d’erreurs, et tester les matrices de diffusion de Jarvis-Judice-Ninke
+
+---
+
+### Question 21 - Donner une spécification de votre interface sous forme d’un projet d’écran d’aide, tel que celui qui sera obtenu par cargo run -- --help
+
+---
+
+### Question 22 - Déterminer le type Rust correspondant à une sélection d’options fournies par l’utilisateur
+
+---
+
+### Question 23 - Implémenter votre interface en ligne de commande à l’aide de la directive #[derive(FromArgs)] sur votre type, suivant la documentation à https://docs.rs/argh/0.1.13/ argh/ 
