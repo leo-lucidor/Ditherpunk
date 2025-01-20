@@ -514,6 +514,109 @@ if luminosity > normalized_threshold {
 
 ### Question 16 - Implémenter un mécanisme de diffusion d’erreur
 
+Cette fonction applique un tramage en noir et blanc avec diffusion d'erreur selon une matrice définie. Voici les étapes avec des extraits de code correspondants :
+
+```rust
+fn error_diffusion(image: &mut RgbImage) {
+    let width = image.width() as i32;
+    let height = image.height() as i32;
+
+    // Convertir l'image en niveaux de gris
+    let mut grayscale_image: Vec<Vec<f32>> = vec![vec![0.0; width as usize]; height as usize];
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(x as u32, y as u32);
+            grayscale_image[y as usize][x as usize] = luminosity_of_pixel(*pixel) / 255.0; // Normaliser à [0, 1]
+        }
+    }
+
+    for y in 0..height {
+        for x in 0..width {
+            // Récupérer la valeur actuelle
+            let old_value = grayscale_image[y as usize][x as usize];
+
+            // Quantification : remplace par noir (0.0) ou blanc (1.0)
+            let new_value = if old_value > 0.5 { 1.0 } else { 0.0 };
+
+            // Appliquer la nouvelle valeur au pixel
+            let color = if new_value == 1.0 { WHITE } else { BLACK };
+            image.put_pixel(x as u32, y as u32, color);
+
+            // Calculer l'erreur
+            let error = old_value - new_value;
+
+            // Diffuser l'erreur aux pixels voisins
+            if x + 1 < width {
+                grayscale_image[y as usize][(x + 1) as usize] += error * 0.5; // Pixel à droite
+            }
+            if y + 1 < height {
+                grayscale_image[(y + 1) as usize][x as usize] += error * 0.5; // Pixel en dessous
+            }
+        }
+    }
+}
+```
+
+#### Étape 1 : Conversion en niveaux de gris
+
+    Avant de commencer le traitement, l'image est convertie en niveaux de gris. Pour cela, chaque pixel est analysé, et sa luminosité (valeur entre 0 et 1) est calculée et stockée dans une matrice 2D grayscale_image
+
+```rust
+let mut grayscale_image: Vec<Vec<f32>> = vec![vec![0.0; width as usize]; height as usize];
+for y in 0..height {
+    for x in 0..width {
+        let pixel = image.get_pixel(x, y);
+        grayscale_image[y as usize][x as usize] = luminosity_of_pixel(*pixel) / 255.0;
+    }
+}
+```
+
+#### Étape 2 : Traitement des pixels un par un
+
+    Chaque pixel est parcouru dans un ordre spécifique (ligne par ligne). La valeur de luminosité du pixel est extraite et utilisée pour déterminer s'il sera transformé en noir ou blanc, selon un seuil de 0.5
+
+```rust
+let old_value = grayscale_image[y as usize][x as usize];
+let new_value = if old_value > 0.5 { 1.0 } else { 0.0 };
+```
+
+#### Étape 3 : Calcul de l'erreur de quantification
+
+    L'erreur entre la luminosité originale et la valeur quantifiée (noir ou blanc) est calculée. Cette erreur sera ensuite diffusée aux pixels voisins
+
+```rust
+let error = old_value - new_value;
+```
+
+#### Étape 4 : Diffusion de l'erreur aux voisins
+
+Selon la matrice donnée (* 0.5 / 0.5 0), l'erreur est répartie sur les pixels adjacents :
+
+    - 50% de l'erreur est ajoutée au pixel à droite
+    - 50% de l'erreur est ajoutée au pixel en dessous
+    - Des vérifications assurent que ces pixels voisins sont dans les limites de l'image
+
+```rust
+if x + 1 < width {
+    grayscale_image[y as usize][(x + 1) as usize] += 0.5 * error;
+}
+if y + 1 < height {
+    grayscale_image[(y + 1) as usize][x as usize] += 0.5 * error;
+}
+```
+
+#### Étape 5 : Mise à jour de l'image
+
+    Le pixel est finalement remplacé par du noir (BLACK) ou du blanc (WHITE) dans l'image de sortie
+
+```rust
+if new_value == 1.0 {
+    image.put_pixel(x, y, WHITE);
+} else {
+    image.put_pixel(x, y, BLACK);
+}
+```
+
 ---
 
 ### Question 17 - Pour une palette de couleurs comme dans la partie 3, expliquer dans votre README comment vous représentez l’erreur commise à chaque pixel, comment vous la diffusez
