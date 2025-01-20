@@ -381,19 +381,19 @@ Assemblage de B3
 
 On assemble les blocs pour obtenir B3​ :
 
-    B3=(1/64)*[4B2     4B2+3U2
+    B3=(1/64)*[4B2      4B2+3U2
                4B2+2U2  4B2+U2]
 
 Ce qui donne directement :
 
-    B3=[0  32  8 40  3 35 11 43 
-        48 16 56 24 51 19 59 27 
-        12 44  4 36 15 47  7 39 
-        60 28 52 20 63 31 55 23 
-        2 34 10 42  1 33  9 41
-        50 18 58 26 49 17 57 25
-        14 46  6 38 13 45  5 37
-        62 30 54 22 61 29 53 21]
+    B3=[0  32  8 40  2 34 10 42 
+        48 16 56 24 50 18 58 26 
+        12 44  4 36 14 46  6 38 
+        60 28 52 20 62 30 54 22 
+         3 35 11 43  1 33  9 41
+        51 19 59 27 49 17 57 25
+        15 47  7 39 13 45  5 37
+        63 31 55 23 61 29 53 21]
 
 --- 
 
@@ -410,7 +410,7 @@ où UnUn​ est une matrice remplie de 1.
 
 La fonction combine ces quadrants dans une nouvelle matrice de taille 2n×2n2n×2n, en suivant une approche récursive. Cela permet de construire des matrices d'ordre arbitraire de manière efficace, tout en respectant la définition mathématique.
 
-![alt text](image.png)
+![alt text](./ditherpunk/rapport/B3.png)
 
 ### Question 14 - Quel type de données utiliser pour représenter la matrice de Bayer? Comment créer une matrice de Bayer d’ordre arbitraire?
 
