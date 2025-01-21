@@ -198,48 +198,88 @@ fn generate_bayer_matrix(order: usize) -> Vec<Vec<u32>> {
 }
 // ---------------------------------------------------------
 
-fn main() -> Result<(), ImageError>{
-    // let args: DitherArgs = argh::from_env();
+// Question 15
+fn bayer_dithering(image: &mut RgbImage, bayer_matrix: &[Vec<u32>]) {
+    let matrix_size = bayer_matrix.len() as u32;
 
-    // let path_in = args.input;
-    // let path_out = args.output.unwrap_or("./img/IUT_OUT.png".to_string());
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let luminosity = luminosity_of_pixel(*pixel);
 
-    // // Ouvrir l'image
-    // let mut img: DynamicImage = open(path_in)?;
+            // Récupérer le seuil de la matrice (en répétant la matrice)
+            let threshold = bayer_matrix[(y % matrix_size) as usize][(x % matrix_size) as usize] as f32;
 
-    // let mut rgb_image = img.to_rgb8();
-
-    // let mut pixelblanc = false;
-
-    // // Afficher dans le terminal la couleur du pixel (32, 52) de l’image
-    // let pixel = rgb_image.get_pixel(32, 52);
-    // println!("Pixel (32, 52) : {:?}", pixel);
-
-    // // Calculer la luminosité du pixel
-    // let luminosity = luminosity_of_pixel(*pixel);
-    // println!("La luminosité du pixel (100, 100) est : {}", luminosity);
-
-    // // Appliquer le tramage aléatoire
-    // random_dithering(&mut rgb_image);
-
-    // // Appliquer le traitement de distance entre deux couleurs
-    // let distance = color_distance(BLACK, BLACK);
-    // println!("La distance entre rouge et bleu est : {}", distance);
-
-    // rgb_image.save(&path_out).unwrap();
-
-    // Calculer B3
-    let b3 = generate_bayer_matrix(3);
-
-    // Affichage de la matrice B3
-    println!("Matrice B3 :");
-    for row in b3 {
-        for value in row {
-            print!("{:>3} ", value);
+            // Appliquer le seuil (normalisé à 255)
+            if luminosity > (threshold / (matrix_size * matrix_size) as f32) * 255.0 {
+                image.put_pixel(x, y, WHITE);
+            } else {
+                image.put_pixel(x, y, BLACK);
+            }
         }
-        println!();
     }
-    
-    //
+}
+// ---------------------------------------------------------
+
+// Question 16
+fn error_diffusion(image: &mut RgbImage) {
+    let width = image.width() as i32;
+    let height = image.height() as i32;
+
+    // Convertir l'image en niveaux de gris
+    let mut grayscale_image: Vec<Vec<f32>> = vec![vec![0.0; width as usize]; height as usize];
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(x as u32, y as u32);
+            grayscale_image[y as usize][x as usize] = luminosity_of_pixel(*pixel) / 255.0; // Normaliser à [0, 1]
+        }
+    }
+
+    for y in 0..height {
+        for x in 0..width {
+            // Récupérer la valeur actuelle
+            let old_value = grayscale_image[y as usize][x as usize];
+
+            // Quantification : remplace par noir (0.0) ou blanc (1.0)
+            let new_value = if old_value > 0.5 { 1.0 } else { 0.0 };
+
+            // Appliquer la nouvelle valeur au pixel
+            let color = if new_value == 1.0 { WHITE } else { BLACK };
+            image.put_pixel(x as u32, y as u32, color);
+
+            // Calculer l'erreur
+            let error = old_value - new_value;
+
+            // Diffuser l'erreur aux pixels voisins
+            if x + 1 < width {
+                grayscale_image[y as usize][(x + 1) as usize] += error * 0.5; // Pixel à droite
+            }
+            if y + 1 < height {
+                grayscale_image[(y + 1) as usize][x as usize] += error * 0.5; // Pixel en dessous
+            }
+        }
+    }
+}
+// ---------------------------------------------------------
+
+fn main() -> Result<(), ImageError> {
+    let args: DitherArgs = argh::from_env();
+
+    let path_in = args.input;
+    let path_out = args.output.unwrap_or("./img/IUT_OUT.png".to_string());
+
+    // Ouvrir l'image
+    let mut img: DynamicImage = open(path_in)?;
+
+    let mut rgb_image = img.to_rgb8();
+
+    // Appliquer la diffusion d'erreur
+    error_diffusion(&mut rgb_image);
+
+    // Sauvegarder l'image résultante
+    rgb_image.save(&path_out).unwrap();
+
+    println!("Image tramée par matrice de Bayer sauvegardée dans {}", path_out);
+
     Ok(())
 }

@@ -472,4 +472,236 @@ Pour générer une matrice d'ordre arbitraire, une fonction récursive est idéa
 
 ### Question 15 - Implémenter le tramage par matrice de Bayer
 
-​
+```rust
+fn bayer_dithering(image: &mut RgbImage, bayer_matrix: &[Vec<u32>]) {
+    let matrix_size = bayer_matrix.len() as u32;
+
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let luminosity = luminosity_of_pixel(*pixel);
+
+            // Récupérer le seuil de la matrice (en répétant la matrice)
+            let threshold = bayer_matrix[(y % matrix_size) as usize][(x % matrix_size) as usize] as f32;
+
+            // Appliquer le seuil (normalisé à 255)
+            if luminosity > (threshold / (matrix_size * matrix_size) as f32) * 255.0 {
+                image.put_pixel(x, y, WHITE);
+            } else {
+                image.put_pixel(x, y, BLACK);
+            }
+        }
+    }
+}
+```
+
+La fonction "bayer_dithering" permet d'appliquer un tramage ordonné à une image en utilisant une matrice de Bayer pour déterminer les seuils de conversion de chaque pixel en noir ou blanc. Voici les étapes principales :
+
+#### Taille de la matrice de Bayer :
+
+``` rust
+let matrix_size = bayer_matrix.len() as u32;
+```
+
+    Cette variable récupère la taille de la matrice de Bayer (assumée carrée). Elle est utilisée pour gérer la répétition de la matrice sur l'image.
+
+#### Parcours de l'image pixel par pixel :
+
+```rust
+for y in 0..image.height() {
+    for x in 0..image.width() {
+```
+
+    La fonction parcourt chaque pixel de l'image pour appliquer la transformation.
+
+#### Calcul de la luminosité du pixel :
+
+```rust
+let luminosity = luminosity_of_pixel(*pixel);
+```
+
+    La luminosité est extraite pour déterminer si le pixel doit être remplacé par du noir ou du blanc.
+
+#### Répétition de la matrice de Bayer :
+
+```rust
+let threshold = bayer_matrix[(y % matrix_size) as usize][(x % matrix_size) as usize] as f32;
+```
+
+    La matrice de Bayer est répétée sur l'image à l'aide des opérations modulo (%). Cela permet de couvrir une image de taille arbitraire en "mosaïquant" la matrice de Bayer.
+
+#### Normalisation du seuil :
+
+```rust
+if luminosity > (threshold / (matrix_size * matrix_size) as f32) * 255.0 {
+```
+
+    Les valeurs dans la matrice de Bayer sont normalisées par rapport à la plage de valeurs des pixels (0 à 255). Cela garantit que les seuils de Bayer, initialement entre 0 et 2n−1, correspondent à des seuils dans l'échelle de la luminosité.
+
+#### Application du tramage :
+
+```rust
+if luminosity > normalized_threshold {
+    image.put_pixel(x, y, WHITE);
+} else {
+    image.put_pixel(x, y, BLACK);
+}
+```
+
+    Le pixel est remplacé par du blanc si sa luminosité dépasse le seuil correspondant de la matrice de Bayer, sinon par du noir. Cela crée un effet de tramage visuellement ordonné.
+
+---
+
+### Question 16 - Implémenter un mécanisme de diffusion d’erreur
+
+Cette fonction applique un tramage en noir et blanc avec diffusion d'erreur selon une matrice définie. Voici les étapes avec des extraits de code correspondants :
+
+```rust
+fn error_diffusion(image: &mut RgbImage) {
+    let width = image.width() as i32;
+    let height = image.height() as i32;
+
+    // Convertir l'image en niveaux de gris
+    let mut grayscale_image: Vec<Vec<f32>> = vec![vec![0.0; width as usize]; height as usize];
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(x as u32, y as u32);
+            grayscale_image[y as usize][x as usize] = luminosity_of_pixel(*pixel) / 255.0; // Normaliser à [0, 1]
+        }
+    }
+
+    for y in 0..height {
+        for x in 0..width {
+            // Récupérer la valeur actuelle
+            let old_value = grayscale_image[y as usize][x as usize];
+
+            // Quantification : remplace par noir (0.0) ou blanc (1.0)
+            let new_value = if old_value > 0.5 { 1.0 } else { 0.0 };
+
+            // Appliquer la nouvelle valeur au pixel
+            let color = if new_value == 1.0 { WHITE } else { BLACK };
+            image.put_pixel(x as u32, y as u32, color);
+
+            // Calculer l'erreur
+            let error = old_value - new_value;
+
+            // Diffuser l'erreur aux pixels voisins
+            if x + 1 < width {
+                grayscale_image[y as usize][(x + 1) as usize] += error * 0.5; // Pixel à droite
+            }
+            if y + 1 < height {
+                grayscale_image[(y + 1) as usize][x as usize] += error * 0.5; // Pixel en dessous
+            }
+        }
+    }
+}
+```
+
+#### Étape 1 : Conversion en niveaux de gris
+
+    Avant de commencer le traitement, l'image est convertie en niveaux de gris. Pour cela, chaque pixel est analysé, et sa luminosité (valeur entre 0 et 1) est calculée et stockée dans une matrice 2D grayscale_image
+
+```rust
+let mut grayscale_image: Vec<Vec<f32>> = vec![vec![0.0; width as usize]; height as usize];
+for y in 0..height {
+    for x in 0..width {
+        let pixel = image.get_pixel(x, y);
+        grayscale_image[y as usize][x as usize] = luminosity_of_pixel(*pixel) / 255.0;
+    }
+}
+```
+
+#### Étape 2 : Traitement des pixels un par un
+
+    Chaque pixel est parcouru dans un ordre spécifique (ligne par ligne). La valeur de luminosité du pixel est extraite et utilisée pour déterminer s'il sera transformé en noir ou blanc, selon un seuil de 0.5
+
+```rust
+let old_value = grayscale_image[y as usize][x as usize];
+let new_value = if old_value > 0.5 { 1.0 } else { 0.0 };
+```
+
+#### Étape 3 : Calcul de l'erreur de quantification
+
+    L'erreur entre la luminosité originale et la valeur quantifiée (noir ou blanc) est calculée. Cette erreur sera ensuite diffusée aux pixels voisins
+
+```rust
+let error = old_value - new_value;
+```
+
+#### Étape 4 : Diffusion de l'erreur aux voisins
+
+Selon la matrice donnée (* 0.5 / 0.5 0), l'erreur est répartie sur les pixels adjacents :
+
+    - 50% de l'erreur est ajoutée au pixel à droite
+    - 50% de l'erreur est ajoutée au pixel en dessous
+    - Des vérifications assurent que ces pixels voisins sont dans les limites de l'image
+
+```rust
+if x + 1 < width {
+    grayscale_image[y as usize][(x + 1) as usize] += 0.5 * error;
+}
+if y + 1 < height {
+    grayscale_image[(y + 1) as usize][x as usize] += 0.5 * error;
+}
+```
+
+#### Étape 5 : Mise à jour de l'image
+
+    Le pixel est finalement remplacé par du noir (BLACK) ou du blanc (WHITE) dans l'image de sortie
+
+```rust
+if new_value == 1.0 {
+    image.put_pixel(x, y, WHITE);
+} else {
+    image.put_pixel(x, y, BLACK);
+}
+```
+
+---
+
+### Question 17 - Pour une palette de couleurs comme dans la partie 3, expliquer dans votre README comment vous représentez l’erreur commise à chaque pixel, comment vous la diffusez
+
+Lorsque nous utilisons une palette de couleurs au lieu d'une simple conversion en noir et blanc, la gestion de l'erreur devient plus complexe. L'erreur commise lors de l'approximation de la couleur d'un pixel est alors représentée par un vecteur contenant les différences pour chacune des trois composantes de couleur : rouge (R), vert (G) et bleu (B).
+
+#### Étape 1 : Représentation de l'erreur
+
+L'erreur pour un pixel est définie comme la différence entre sa couleur d'origine et la couleur choisie dans la palette. Cela signifie qu'au lieu d'une simple valeur de luminosité, l'erreur est un vecteur contenant trois valeurs : l'erreur pour le rouge, le vert et le bleu. Ces erreurs traduisent combien la couleur finale du pixel s'éloigne de la couleur réelle.
+
+#### Étape 2 : Diffusion de l'erreur
+
+Une fois l'erreur calculée, elle est répartie entre les pixels voisins non traités. Cette diffusion est effectuée à l'aide d'une matrice qui détermine quelle proportion de l'erreur est attribuée à chaque voisin. Par 
+
+exemple, si on utilise une matrice simple :
+
+    [ ∗  0.50]
+    [0.5 ​0.50​]
+
+Cela signifie que 50 % de l'erreur est transférée au pixel situé à droite et 50 % au pixel situé en dessous. Chaque composante de l'erreur (R, G, B) est propagée de manière indépendante selon cette matrice.
+
+#### Étape 3 : Correction des pixels
+
+Avant de quantifier la couleur d'un pixel suivant la palette, on prend en compte l'erreur accumulée provenant des pixels précédents. Cela permet d'ajuster la couleur du pixel pour compenser les approximations faites plus tôt. Cette méthode assure une meilleure continuité entre les couleurs et réduit les artefacts visuels.
+
+---
+
+### Question 18 - Implémenter la diffusion d’erreur pour la palettisation d’images
+
+---
+
+### Question 19 - Implémenter la diffusion d’erreur pour la matrice de Floyd-Steinberg
+
+---
+
+### Question 20 - Comment représenter une matrice de diffusion d’erreur arbitraire? Permettre de changer de matrice de diffusion d’erreurs, et tester les matrices de diffusion de Jarvis-Judice-Ninke
+
+---
+
+### Question 21 - Donner une spécification de votre interface sous forme d’un projet d’écran d’aide, tel que celui qui sera obtenu par cargo run -- --help
+
+---
+
+### Question 22 - Déterminer le type Rust correspondant à une sélection d’options fournies par l’utilisateur
+
+---
+
+### Question 23 - Implémenter votre interface en ligne de commande à l’aide de la directive #[derive(FromArgs)] sur votre type, suivant la documentation à https://docs.rs/argh/0.1.13/ argh/ 
