@@ -690,24 +690,6 @@ fn error_diffusion_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
 }
 ```
 
-Nous avons implémentaté la fonction qui permet de trouver la couleur la plus proche, dans la palette de couleurs données :
-
-```rust
-// Fonction pour trouver la couleur la plus proche dans la palette
-fn find_closest_color(original_color: [f32; 3], palette: &[Rgb<u8>]) -> Rgb<u8> {
-    palette
-        .iter()
-        .min_by_key(|color| {
-            let distance = (original_color[0] - color[0] as f32).powi(2)
-                + (original_color[1] - color[1] as f32).powi(2)
-                + (original_color[2] - color[2] as f32).powi(2);
-            (distance * 1000.0) as u32
-        })
-        .unwrap()
-        .to_owned()
-}
-```
-
 Nous avons implémentaté la fonction permettant de distribuer l'erreur à un pixel voisin :
 
 ```rust

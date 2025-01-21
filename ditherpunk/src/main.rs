@@ -1,6 +1,6 @@
 use argh::FromArgs;
 use image::{open, DynamicImage, ImageError};
-use image::{RgbImage, Rgb};
+use image::{RgbaImage, Rgba};
 use rand::Rng; // Pour générer des nombres aléatoires
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -43,28 +43,28 @@ struct OptsPalette {
     n_couleurs: usize
 }
  
-const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
-const GREY: image::Rgb<u8> = image::Rgb([127, 127, 127]);
-const BLACK: image::Rgb<u8> = image::Rgb([0, 0, 0]);
-const BLUE: image::Rgb<u8> = image::Rgb([0, 0, 255]);
-const RED: image::Rgb<u8> = image::Rgb([255, 0, 0]);
-const GREEN: image::Rgb<u8> = image::Rgb([0, 255, 0]);
-const YELLOW: image::Rgb<u8> = image::Rgb([255, 255, 0]);
-const MAGENTA: image::Rgb<u8> = image::Rgb([255, 0, 255]);
-const CYAN: image::Rgb<u8> = image::Rgb([0, 255, 255]);
+const WHITE: image::Rgba<u8> = image::Rgba([255, 255, 255, 255]);
+const GREY: image::Rgba<u8> = image::Rgba([127, 127, 127, 255]);
+const BLACK: image::Rgba<u8> = image::Rgba([0, 0, 0, 255]);
+const BLUE: image::Rgba<u8> = image::Rgba([0, 0, 255, 255]);
+const RED: image::Rgba<u8> = image::Rgba([255, 0, 0, 255]);
+const GREEN: image::Rgba<u8> = image::Rgba([0, 255, 0, 255]);
+const YELLOW: image::Rgba<u8> = image::Rgba([255, 255, 0, 255]);
+const MAGENTA: image::Rgba<u8> = image::Rgba([255, 0, 255, 255]);
+const CYAN: image::Rgba<u8> = image::Rgba([0, 255, 255, 255]);
 
-const PALETTE: [Rgb<u8>; 0] = [
+const PALETTE: [Rgba<u8>; 0] = [
     
 ];
 
-fn luminosity_of_pixel(pixel: Rgb<u8>) -> f32 {
+fn luminosity_of_pixel(pixel: Rgba<u8>) -> f32 {
     // Extraire les canaux R, G, B du pixel
     let (r, g, b) = (pixel[0], pixel[1], pixel[2]);
     // Calcul de la luminosité en utilisant la formule pondérée
     0.299 * r as f32 + 0.587 * g as f32 + 0.114 * b as f32
 }
 
-fn to_monochrome(image: &mut RgbImage) {
+fn to_monochrome(image: &mut RgbaImage) {
     for y in 0..image.height() {
         for x in 0..image.width() {
             let pixel = image.get_pixel(x, y);
@@ -80,7 +80,7 @@ fn to_monochrome(image: &mut RgbImage) {
     }
 }
 
-fn to_pair_colors(image: &mut RgbImage, color_low: Rgb<u8>, color_high: Rgb<u8>) {
+fn to_pair_colors(image: &mut RgbaImage, color_low: Rgba<u8>, color_high: Rgba<u8>) {
     for y in 0..image.height() {
         for x in 0..image.width() {
             let pixel = image.get_pixel(x, y);
@@ -97,18 +97,19 @@ fn to_pair_colors(image: &mut RgbImage, color_low: Rgb<u8>, color_high: Rgb<u8>)
 }
 
 // Question 9
-fn color_distance(c1: Rgb<u8>, c2: Rgb<u8>) -> f32 {
+fn color_distance(c1: Rgba<u8>, c2: Rgba<u8>) -> f32 {
     let r_diff = c1[0] as f32 - c2[0] as f32;
     let g_diff = c1[1] as f32 - c2[1] as f32;
     let b_diff = c1[2] as f32 - c2[2] as f32;
+    let a_diff = c1[3] as f32 - c2[3] as f32;
 
     // Calcul de la distance euclidienne
-    ((r_diff.powi(2) + g_diff.powi(2) + b_diff.powi(2)).sqrt())
+    ((r_diff.powi(2) + g_diff.powi(2) + b_diff.powi(2) + a_diff.powi(2)).sqrt())
 }
 // ---------------------------------------------------------
 
 // Question 11
-fn to_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
+fn to_palette(image: &mut RgbaImage, palette: &[Rgba<u8>]) {
     // Si la palette est vide, on ne fait rien
     if palette.is_empty() {
         println!("La palette est vide. Aucun traitement n'est appliqué.");
@@ -124,7 +125,7 @@ fn to_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
     }
 }
 
-fn find_closest_color(pixel: Rgb<u8>, palette: &[Rgb<u8>]) -> Rgb<u8> {
+fn find_closest_color(pixel: Rgba<u8>, palette: &[Rgba<u8>]) -> Rgba<u8> {
     let mut min_distance = f32::MAX;
     let mut closest_color = palette[0];
 
@@ -141,7 +142,7 @@ fn find_closest_color(pixel: Rgb<u8>, palette: &[Rgb<u8>]) -> Rgb<u8> {
 // ---------------------------------------------------------
 
 // Question 12
-fn random_dithering(image: &mut RgbImage) {
+fn random_dithering(image: &mut RgbaImage) {
     let mut rng = rand::thread_rng(); // Générateur de nombres aléatoires
 
     for y in 0..image.height() {
@@ -199,7 +200,7 @@ fn generate_bayer_matrix(order: usize) -> Vec<Vec<u32>> {
 // ---------------------------------------------------------
 
 // Question 15
-fn bayer_dithering(image: &mut RgbImage, bayer_matrix: &[Vec<u32>]) {
+fn bayer_dithering(image: &mut RgbaImage, bayer_matrix: &[Vec<u32>]) {
     let matrix_size = bayer_matrix.len() as u32;
 
     for y in 0..image.height() {
@@ -222,7 +223,7 @@ fn bayer_dithering(image: &mut RgbImage, bayer_matrix: &[Vec<u32>]) {
 // ---------------------------------------------------------
 
 // Question 16
-fn error_diffusion(image: &mut RgbImage) {
+fn error_diffusion(image: &mut RgbaImage) {
     let width = image.width() as i32;
     let height = image.height() as i32;
 
@@ -263,7 +264,7 @@ fn error_diffusion(image: &mut RgbImage) {
 // ---------------------------------------------------------
 
 // Question 18 
-fn error_diffusion_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
+fn error_diffusion_palette(image: &mut RgbaImage, palette: &[Rgba<u8>]) {
     let width = image.width() as i32;
     let height = image.height() as i32;
 
@@ -271,11 +272,7 @@ fn error_diffusion_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
     for y in 0..height {
         for x in 0..width {
             let pixel = image.get_pixel(x as u32, y as u32);
-            let original_color = [
-                pixel[0] as f32,
-                pixel[1] as f32,
-                pixel[2] as f32,
-            ];
+            let original_color = *pixel;
 
             // Trouver la couleur la plus proche dans la palette
             let closest_color = find_closest_color(original_color, palette);
@@ -285,41 +282,28 @@ fn error_diffusion_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
 
             // Calculer l'erreur (différence entre l'original et la couleur choisie)
             let error = [
-                original_color[0] - closest_color[0] as f32,
-                original_color[1] - closest_color[1] as f32,
-                original_color[2] - closest_color[2] as f32,
+                original_color[0] as f32 - closest_color[0] as f32,
+                original_color[1] as f32 - closest_color[1] as f32,
+                original_color[2] as f32 - closest_color[2] as f32,
+                original_color[3] as f32 - closest_color[3] as f32,
             ];
 
             // Diffuser l'erreur aux pixels voisins
             if x + 1 < width {
-                distribute_error(image, x + 1, y, error, [0.5, 0.5, 0.5]);
+                distribute_error(image, x + 1, y, error, [0.5, 0.5, 0.5, 0.5]);
             }
             if y + 1 < height {
-                distribute_error(image, x, y + 1, error, [0.5, 0.5, 0.5]);
+                distribute_error(image, x, y + 1, error, [0.5, 0.5, 0.5, 0.5]);
             }
         }
     }
 }
 
-// Fonction pour trouver la couleur la plus proche dans la palette
-fn find_closest_color(original_color: [f32; 3], palette: &[Rgb<u8>]) -> Rgb<u8> {
-    palette
-        .iter()
-        .min_by_key(|color| {
-            let distance = (original_color[0] - color[0] as f32).powi(2)
-                + (original_color[1] - color[1] as f32).powi(2)
-                + (original_color[2] - color[2] as f32).powi(2);
-            (distance * 1000.0) as u32
-        })
-        .unwrap()
-        .to_owned()
-}
-
 // Fonction pour distribuer l'erreur à un pixel voisin
-fn distribute_error(image: &mut RgbImage, x: i32, y: i32, error: [f32; 3], coefficients: [f32; 3]) {
+fn distribute_error(image: &mut RgbaImage, x: i32, y: i32, error: [f32; 4], coefficients: [f32; 4]) {
     let pixel = image.get_pixel_mut(x as u32, y as u32);
 
-    for i in 0..3 {
+    for i in 0..4 {
         let new_value = (pixel[i] as f32 + error[i] * coefficients[i]).clamp(0.0, 255.0);
         pixel[i] = new_value as u8;
     }
@@ -334,28 +318,24 @@ fn main() -> Result<(), ImageError> {
 
     // Ouvrir l'image
     let mut img: DynamicImage = open(path_in)?;
-    let mut rgb_image = img.to_rgb8();
+    let mut rgba_image = img.to_rgba8();
 
     // Définir une palette de couleurs (exemple avec 8 couleurs)
     let palette = vec![
-        Rgb([0, 0, 0]),    // Noir
-        Rgb([255, 255, 255]), // Blanc
-        Rgb([255, 0, 0]),  // Rouge
-        Rgb([0, 255, 0]),  // Vert
-        Rgb([0, 0, 255]),  // Bleu
-        Rgb([255, 255, 0]), // Jaune
-        Rgb([0, 255, 255]), // Cyan
-        Rgb([255, 0, 255]), // Magenta
+        Rgba([0, 0, 0, 255]),    // Noir
+        Rgba([255, 255, 255, 255]), // Blanc
+        Rgba([185, 17, 40, 255]),  // Rouge
+        Rgba([19, 105, 18, 255]),  // Vert
+        // Rgba([0, 0, 255, 255]),  // Bleu
     ];
 
     // Appliquer la diffusion d'erreur avec la palette définie
-    error_diffusion_palette(&mut rgb_image, &palette);
+    error_diffusion_palette(&mut rgba_image, &palette);
 
     // Sauvegarder l'image résultante
-    rgb_image.save(&path_out).unwrap();
+    rgba_image.save(&path_out).unwrap();
 
     println!("Image palettisée avec diffusion d'erreur sauvegardée dans {}", path_out);
 
     Ok(())
 }
-
