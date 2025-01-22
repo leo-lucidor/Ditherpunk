@@ -340,6 +340,83 @@ fn error_diffusion_palette(image: &mut RgbaImage, palette: &[Rgba<u8>]) {
 }
 // ---------------------------------------------------------
 
+// Question 19
+fn error_diffusion_matrice_floyd_steinberg(image: &mut RgbaImage, palette: &[Rgba<u8>]) {
+    let width = image.width() as i32;
+    let height = image.height() as i32;
+
+    // Parcours des pixels
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(x as u32, y as u32);
+            let original_color = *pixel;
+
+            // Trouver la couleur la plus proche dans la palette
+            let closest_color = palette.iter().min_by(|&c1, &c2| {
+                color_distance(&original_color, c1)
+                    .partial_cmp(&color_distance(&original_color, c2))
+                    .unwrap()
+            }).unwrap();
+
+            // Appliquer la couleur la plus proche au pixel
+            image.put_pixel(x as u32, y as u32, *closest_color);
+
+            // Calculer l'erreur (différence entre l'original et la couleur choisie)
+            let error = [
+                original_color[0] as i32 - closest_color[0] as i32,
+                original_color[1] as i32 - closest_color[1] as i32,
+                original_color[2] as i32 - closest_color[2] as i32,
+            ];
+
+            // Diffuser l'erreur aux pixels voisins selon Floyd-Steinberg
+            if x + 1 < width {
+                let right_pixel = image.get_pixel(x as u32 + 1, y as u32);
+                let new_right_pixel = [
+                    (right_pixel[0] as i32 + (error[0] * 7 / 16)).clamp(0, 255) as u8,
+                    (right_pixel[1] as i32 + (error[1] * 7 / 16)).clamp(0, 255) as u8,
+                    (right_pixel[2] as i32 + (error[2] * 7 / 16)).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32 + 1, y as u32, Rgba(new_right_pixel));
+            }
+
+            if y + 1 < height {
+                if x > 0 {
+                    let bottom_left_pixel = image.get_pixel(x as u32 - 1, y as u32 + 1);
+                    let new_bottom_left_pixel = [
+                        (bottom_left_pixel[0] as i32 + (error[0] * 3 / 16)).clamp(0, 255) as u8,
+                        (bottom_left_pixel[1] as i32 + (error[1] * 3 / 16)).clamp(0, 255) as u8,
+                        (bottom_left_pixel[2] as i32 + (error[2] * 3 / 16)).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 - 1, y as u32 + 1, Rgba(new_bottom_left_pixel));
+                }
+
+                let bottom_pixel = image.get_pixel(x as u32, y as u32 + 1);
+                let new_bottom_pixel = [
+                    (bottom_pixel[0] as i32 + (error[0] * 5 / 16)).clamp(0, 255) as u8,
+                    (bottom_pixel[1] as i32 + (error[1] * 5 / 16)).clamp(0, 255) as u8,
+                    (bottom_pixel[2] as i32 + (error[2] * 5 / 16)).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32, y as u32 + 1, Rgba(new_bottom_pixel));
+
+                if x + 1 < width {
+                    let bottom_right_pixel = image.get_pixel(x as u32 + 1, y as u32 + 1);
+                    let new_bottom_right_pixel = [
+                        (bottom_right_pixel[0] as i32 + (error[0] * 1 / 16)).clamp(0, 255) as u8,
+                        (bottom_right_pixel[1] as i32 + (error[1] * 1 / 16)).clamp(0, 255) as u8,
+                        (bottom_right_pixel[2] as i32 + (error[2] * 1 / 16)).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 + 1, y as u32 + 1, Rgba(new_bottom_right_pixel));
+                }
+            }
+        }
+    }
+}
+// ---------------------------------------------------------
+
 fn main() -> Result<(), ImageError> {
     let args: DitherArgs = argh::from_env();
 
@@ -360,7 +437,7 @@ fn main() -> Result<(), ImageError> {
     ];
 
     // Appliquer la diffusion d'erreur avec la palette définie
-    error_diffusion_palette(&mut rgba_image, &palette);
+    error_diffusion_matrice_floyd_steinberg(&mut rgba_image, &palette);
 
     // Sauvegarder l'image résultante
     rgba_image.save(&path_out).unwrap();
