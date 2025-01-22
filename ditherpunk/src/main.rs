@@ -97,7 +97,7 @@ fn to_pair_colors(image: &mut RgbaImage, color_low: Rgba<u8>, color_high: Rgba<u
 }
 
 // Question 9
-fn color_distance(c1: Rgba<u8>, c2: Rgba<u8>) -> f32 {
+fn color_distance(c1: &Rgba<u8>, c2: &Rgba<u8>) -> f32 {
     let r_diff = c1[0] as f32 - c2[0] as f32;
     let g_diff = c1[1] as f32 - c2[1] as f32;
     let b_diff = c1[2] as f32 - c2[2] as f32;
@@ -130,7 +130,7 @@ fn find_closest_color(pixel: Rgba<u8>, palette: &[Rgba<u8>]) -> Rgba<u8> {
     let mut closest_color = palette[0];
 
     for &color in palette {
-        let distance = color_distance(pixel, color);
+        let distance = color_distance(&pixel, &color);
         if distance < min_distance {
             min_distance = distance;
             closest_color = color;
@@ -275,37 +275,67 @@ fn error_diffusion_palette(image: &mut RgbaImage, palette: &[Rgba<u8>]) {
             let original_color = *pixel;
 
             // Trouver la couleur la plus proche dans la palette
-            let closest_color = find_closest_color(original_color, palette);
+            let closest_color = palette.iter().min_by(|&c1, &c2| {
+                color_distance(&original_color, c1)
+                    .partial_cmp(&color_distance(&original_color, c2))
+                    .unwrap()
+            }).unwrap();
 
             // Appliquer la couleur la plus proche au pixel
-            image.put_pixel(x as u32, y as u32, closest_color);
+            image.put_pixel(x as u32, y as u32, *closest_color);
 
             // Calculer l'erreur (différence entre l'original et la couleur choisie)
             let error = [
-                original_color[0] as f32 - closest_color[0] as f32,
-                original_color[1] as f32 - closest_color[1] as f32,
-                original_color[2] as f32 - closest_color[2] as f32,
-                original_color[3] as f32 - closest_color[3] as f32,
+                original_color[0] as i32 - closest_color[0] as i32,
+                original_color[1] as i32 - closest_color[1] as i32,
+                original_color[2] as i32 - closest_color[2] as i32,
             ];
 
             // Diffuser l'erreur aux pixels voisins
             if x + 1 < width {
-                distribute_error(image, x + 1, y, error, [0.5, 0.5, 0.5, 0.5]);
+                let right_pixel = image.get_pixel(x as u32 + 1, y as u32);
+                let new_right_pixel = [
+                    (right_pixel[0] as i32 + error[0] * 7 / 16).clamp(0, 255) as u8,
+                    (right_pixel[1] as i32 + error[1] * 7 / 16).clamp(0, 255) as u8,
+                    (right_pixel[2] as i32 + error[2] * 7 / 16).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32 + 1, y as u32, Rgba(new_right_pixel));
             }
+
             if y + 1 < height {
-                distribute_error(image, x, y + 1, error, [0.5, 0.5, 0.5, 0.5]);
+                if x > 0 {
+                    let bottom_left_pixel = image.get_pixel(x as u32 - 1, y as u32 + 1);
+                    let new_bottom_left_pixel = [
+                        (bottom_left_pixel[0] as i32 + error[0] * 3 / 16).clamp(0, 255) as u8,
+                        (bottom_left_pixel[1] as i32 + error[1] * 3 / 16).clamp(0, 255) as u8,
+                        (bottom_left_pixel[2] as i32 + error[2] * 3 / 16).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 - 1, y as u32 + 1, Rgba(new_bottom_left_pixel));
+                }
+
+                let bottom_pixel = image.get_pixel(x as u32, y as u32 + 1);
+                let new_bottom_pixel = [
+                    (bottom_pixel[0] as i32 + error[0] * 5 / 16).clamp(0, 255) as u8,
+                    (bottom_pixel[1] as i32 + error[1] * 5 / 16).clamp(0, 255) as u8,
+                    (bottom_pixel[2] as i32 + error[2] * 5 / 16).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32, y as u32 + 1, Rgba(new_bottom_pixel));
+
+                if x + 1 < width {
+                    let bottom_right_pixel = image.get_pixel(x as u32 + 1, y as u32 + 1);
+                    let new_bottom_right_pixel = [
+                        (bottom_right_pixel[0] as i32 + error[0] * 1 / 16).clamp(0, 255) as u8,
+                        (bottom_right_pixel[1] as i32 + error[1] * 1 / 16).clamp(0, 255) as u8,
+                        (bottom_right_pixel[2] as i32 + error[2] * 1 / 16).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 + 1, y as u32 + 1, Rgba(new_bottom_right_pixel));
+                }
             }
         }
-    }
-}
-
-// Fonction pour distribuer l'erreur à un pixel voisin
-fn distribute_error(image: &mut RgbaImage, x: i32, y: i32, error: [f32; 4], coefficients: [f32; 4]) {
-    let pixel = image.get_pixel_mut(x as u32, y as u32);
-
-    for i in 0..4 {
-        let new_value = (pixel[i] as f32 + error[i] * coefficients[i]).clamp(0.0, 255.0);
-        pixel[i] = new_value as u8;
     }
 }
 // ---------------------------------------------------------
