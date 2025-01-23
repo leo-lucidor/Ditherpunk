@@ -19,7 +19,10 @@ struct DitherArgs {
 
     /// le mode d’opération
     #[argh(subcommand)]
-    mode: Mode
+    mode: Mode,
+
+    #[argh(switch, short = 'h', long = "help", description = "affiche cette aide")]
+    help: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -430,13 +433,35 @@ fn error_diffusion_matrice_floyd_steinberg(image: &mut RgbaImage, palette: &[Rgb
     }
 }
 // ---------------------------------------------------------
+fn display_help() {
+    println!(
+        "
+        Utilisation : cargo run -- [options]
+
+        Options disponibles :
+        -i, --input       : Chemin vers l'image d'entrée (obligatoire).
+        -o, --output      : Chemin vers l'image de sortie (optionnel).
+        -d, --dither      : Appliquer le dithering à l'image (valeurs possibles : 'Floyd-Steinberg', 'Ordered').
+        -s, --scale       : Facteur de redimensionnement (exemple : 0.5 pour réduire de moitié).
+        -h, --help        : Affiche cette aide.
+
+        Exemple d'utilisation :
+        cargo run -- --input input.jpg --output output.jpg --dither Floyd-Steinberg --scale 0.5
+        "
+    );
+}
+
+// ---------------------------------------------------------
 
 fn main() -> Result<(), ImageError> {
+    
+
     let args: DitherArgs = argh::from_env();
 
     let path_in = args.input;
     let path_out = args.output.unwrap_or("./img/IUT_OUT.png".to_string());
 
+    
     // Ouvrir l'image
     let mut img: DynamicImage = open(path_in)?;
     let mut rgba_image = img.to_rgba8();
