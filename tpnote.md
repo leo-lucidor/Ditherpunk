@@ -1,5 +1,10 @@
 # Ditherpunk
 
+## Membre du groupe
+
+* Lucidor Léo
+* Blandeau Erwan
+* Pilet Colin
 
 ## Partie - 1 
 
@@ -550,6 +555,11 @@ if luminosity > normalized_threshold {
 
     Le pixel est remplacé par du blanc si sa luminosité dépasse le seuil correspondant de la matrice de Bayer, sinon par du noir. Cela crée un effet de tramage visuellement ordonné.
 
+
+IUT.jpg            |  IUT_OUT.png
+:-------------------------:|:-------------------------:
+![](./rapport/q15/IUT.jpg)  |  ![](./rapport/q15/IUT_OUT.png)
+
 ---
 
 ### Question 16 - Implémenter un mécanisme de diffusion d’erreur
@@ -656,6 +666,9 @@ if new_value == 1.0 {
     image.put_pixel(x, y, BLACK);
 }
 ```
+IUT.jpg            |  IUT_OUT.png
+:-------------------------:|:-------------------------:
+![](./rapport/q16/IUT.jpg)  |  ![](./rapport/q16/IUT_OUT.png)
 
 ---
 
@@ -860,26 +873,6 @@ fn error_diffusion_matrice_floyd_steinberg(image: &mut RgbaImage, palette: &[Rgb
 }
 ```
 
-Palette :
-
-    L'algorithme recherche la couleur la plus proche dans la palette définie. La distance euclidienne est utilisée pour évaluer la proximité des couleurs.
-
-Matrice de Floyd-Steinberg :
-
-    Les erreurs sont réparties aux pixels voisins selon le schéma :
-    7/16​ * (droite), 3/16 *​ (bas-gauche), 5/16 *​ (bas), et 1/16 * (bas-droite).
-
-Gestion des pixels :
-
-    Les erreurs sont appliquées seulement si les pixels concernés sont dans les limites de l'image.
-    Les valeurs sont clampées entre 0 et 255 pour éviter les débordements.
-
-Structure :
-    
-    L'algorithme reste proche de votre structure d'origine (question 18), mais implémente la matrice de Floyd-Steinberg.
-
----
-
 ### Question 20 - Comment représenter une matrice de diffusion d’erreur arbitraire? Permettre de changer de matrice de diffusion d’erreurs, et tester les matrices de diffusion de Jarvis-Judice-Ninke
 
 ---
@@ -904,6 +897,57 @@ struct OptsBayer {}
 
 ### Question 22 - Déterminer le type Rust correspondant à une sélection d’options fournies par l’utilisateur
 
+En Rust, pour déterminer le type correspondant à une sélection d'options fournies par l'utilisateur, on pourrait utiliser une énumération (enum) avec différentes variantes, puis associer ces variantes à des options spécifiques. Cela permet de définir un type qui peut prendre plusieurs valeurs, chacune correspondant à une option.
+
+Voici un exemple de code en Rust pour illustrer ce principe :
+
+```rs
+use std::io;
+
+enum OptionType {
+    OptionA,
+    OptionB,
+    OptionC,
+}
+
+fn main() {
+    println!("Sélectionnez une option:");
+    println!("1. Option A");
+    println!("2. Option B");
+    println!("3. Option C");
+
+    // Lire l'entrée de l'utilisateur
+    let mut choix = String::new();
+    io::stdin().read_line(&mut choix).expect("Échec de la lecture de la ligne");
+
+    let choix: u32 = match choix.trim().parse() {
+        Ok(num) => num,
+        Err(_) => {
+            println!("Entrée invalide");
+            return;
+        }
+    };
+
+    // Associer l'entrée à un type OptionType
+    let option = match choix {
+        1 => OptionType::OptionA,
+        2 => OptionType::OptionB,
+        3 => OptionType::OptionC,
+        _ => {
+            println!("Option invalide");
+            return;
+        }
+    };
+
+    // Utiliser le type en fonction de la sélection
+    match option {
+        OptionType::OptionA => println!("Vous avez sélectionné Option A."),
+        OptionType::OptionB => println!("Vous avez sélectionné Option B."),
+        OptionType::OptionC => println!("Vous avez sélectionné Option C."),
+    }
+}
+
+```
 ---
 
 ### Question 23 - Implémenter votre interface en ligne de commande à l’aide de la directive #[derive(FromArgs)] sur votre type, suivant la documentation à https://docs.rs/argh/0.1.13/ argh/ 
