@@ -1,0 +1,23 @@
+# Les fichiers générés par Cargo
+/target/
+
+# Les fichiers de débogage
+**/*.rs.bk
+
+# Fichiers de sauvegarde d'éditeurs de texte
+*.swp
+*.swo
+*.tmp
+*.bk
+*.backup
+
+# Fichiers générés par IDEs
+.idea/
+.vscode/
+*.iml
+
+# Fichiers de logs
+*.log
+
+# Système de gestion des dépendances de Rust
+Cargo.lock
