@@ -56,11 +56,6 @@ struct OptsDithering {}
 /// Rendu de l’image en monochrome en utilisant la matrice de Bayer
 #[argh(subcommand, name="Bayer")]
 struct OptsBayer {}
-
-#[derive(Debug, Clone, PartialEq, FromArgs)]
-/// Rendu de l’image en monochrome en utilisant la matrice de Bayer
-#[argh(subcommand, name="Bayer")]
-struct OptsBayer {}
  
 const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
 const GREY: image::Rgb<u8> = image::Rgb([127, 127, 127]);
