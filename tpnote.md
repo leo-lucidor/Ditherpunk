@@ -897,6 +897,57 @@ struct OptsBayer {}
 
 ### Question 22 - Déterminer le type Rust correspondant à une sélection d’options fournies par l’utilisateur
 
+En Rust, pour déterminer le type correspondant à une sélection d'options fournies par l'utilisateur, on pourrait utiliser une énumération (enum) avec différentes variantes, puis associer ces variantes à des options spécifiques. Cela permet de définir un type qui peut prendre plusieurs valeurs, chacune correspondant à une option.
+
+Voici un exemple de code en Rust pour illustrer ce principe :
+
+```rs
+use std::io;
+
+enum OptionType {
+    OptionA,
+    OptionB,
+    OptionC,
+}
+
+fn main() {
+    println!("Sélectionnez une option:");
+    println!("1. Option A");
+    println!("2. Option B");
+    println!("3. Option C");
+
+    // Lire l'entrée de l'utilisateur
+    let mut choix = String::new();
+    io::stdin().read_line(&mut choix).expect("Échec de la lecture de la ligne");
+
+    let choix: u32 = match choix.trim().parse() {
+        Ok(num) => num,
+        Err(_) => {
+            println!("Entrée invalide");
+            return;
+        }
+    };
+
+    // Associer l'entrée à un type OptionType
+    let option = match choix {
+        1 => OptionType::OptionA,
+        2 => OptionType::OptionB,
+        3 => OptionType::OptionC,
+        _ => {
+            println!("Option invalide");
+            return;
+        }
+    };
+
+    // Utiliser le type en fonction de la sélection
+    match option {
+        OptionType::OptionA => println!("Vous avez sélectionné Option A."),
+        OptionType::OptionB => println!("Vous avez sélectionné Option B."),
+        OptionType::OptionC => println!("Vous avez sélectionné Option C."),
+    }
+}
+
+```
 ---
 
 ### Question 23 - Implémenter votre interface en ligne de commande à l’aide de la directive #[derive(FromArgs)] sur votre type, suivant la documentation à https://docs.rs/argh/0.1.13/ argh/ 
