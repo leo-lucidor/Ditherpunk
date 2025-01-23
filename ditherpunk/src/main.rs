@@ -1,6 +1,6 @@
 use argh::FromArgs;
 use image::{open, DynamicImage, ImageError};
-use image::{RgbImage, Rgb};
+use image::{RgbaImage, Rgba};
 use rand::Rng; // Pour générer des nombres aléatoires
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -43,28 +43,28 @@ struct OptsPalette {
     n_couleurs: usize
 }
  
-const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
-const GREY: image::Rgb<u8> = image::Rgb([127, 127, 127]);
-const BLACK: image::Rgb<u8> = image::Rgb([0, 0, 0]);
-const BLUE: image::Rgb<u8> = image::Rgb([0, 0, 255]);
-const RED: image::Rgb<u8> = image::Rgb([255, 0, 0]);
-const GREEN: image::Rgb<u8> = image::Rgb([0, 255, 0]);
-const YELLOW: image::Rgb<u8> = image::Rgb([255, 255, 0]);
-const MAGENTA: image::Rgb<u8> = image::Rgb([255, 0, 255]);
-const CYAN: image::Rgb<u8> = image::Rgb([0, 255, 255]);
+const WHITE: image::Rgba<u8> = image::Rgba([255, 255, 255, 255]);
+const GREY: image::Rgba<u8> = image::Rgba([127, 127, 127, 255]);
+const BLACK: image::Rgba<u8> = image::Rgba([0, 0, 0, 255]);
+const BLUE: image::Rgba<u8> = image::Rgba([0, 0, 255, 255]);
+const RED: image::Rgba<u8> = image::Rgba([255, 0, 0, 255]);
+const GREEN: image::Rgba<u8> = image::Rgba([0, 255, 0, 255]);
+const YELLOW: image::Rgba<u8> = image::Rgba([255, 255, 0, 255]);
+const MAGENTA: image::Rgba<u8> = image::Rgba([255, 0, 255, 255]);
+const CYAN: image::Rgba<u8> = image::Rgba([0, 255, 255, 255]);
 
-const PALETTE: [Rgb<u8>; 0] = [
+const PALETTE: [Rgba<u8>; 0] = [
     
 ];
 
-fn luminosity_of_pixel(pixel: Rgb<u8>) -> f32 {
+fn luminosity_of_pixel(pixel: Rgba<u8>) -> f32 {
     // Extraire les canaux R, G, B du pixel
     let (r, g, b) = (pixel[0], pixel[1], pixel[2]);
     // Calcul de la luminosité en utilisant la formule pondérée
     0.299 * r as f32 + 0.587 * g as f32 + 0.114 * b as f32
 }
 
-fn to_monochrome(image: &mut RgbImage) {
+fn to_monochrome(image: &mut RgbaImage) {
     for y in 0..image.height() {
         for x in 0..image.width() {
             let pixel = image.get_pixel(x, y);
@@ -80,7 +80,7 @@ fn to_monochrome(image: &mut RgbImage) {
     }
 }
 
-fn to_pair_colors(image: &mut RgbImage, color_low: Rgb<u8>, color_high: Rgb<u8>) {
+fn to_pair_colors(image: &mut RgbaImage, color_low: Rgba<u8>, color_high: Rgba<u8>) {
     for y in 0..image.height() {
         for x in 0..image.width() {
             let pixel = image.get_pixel(x, y);
@@ -97,18 +97,19 @@ fn to_pair_colors(image: &mut RgbImage, color_low: Rgb<u8>, color_high: Rgb<u8>)
 }
 
 // Question 9
-fn color_distance(c1: Rgb<u8>, c2: Rgb<u8>) -> f32 {
+fn color_distance(c1: &Rgba<u8>, c2: &Rgba<u8>) -> f32 {
     let r_diff = c1[0] as f32 - c2[0] as f32;
     let g_diff = c1[1] as f32 - c2[1] as f32;
     let b_diff = c1[2] as f32 - c2[2] as f32;
+    let a_diff = c1[3] as f32 - c2[3] as f32;
 
     // Calcul de la distance euclidienne
-    ((r_diff.powi(2) + g_diff.powi(2) + b_diff.powi(2)).sqrt())
+    ((r_diff.powi(2) + g_diff.powi(2) + b_diff.powi(2) + a_diff.powi(2)).sqrt())
 }
 // ---------------------------------------------------------
 
 // Question 11
-fn to_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
+fn to_palette(image: &mut RgbaImage, palette: &[Rgba<u8>]) {
     // Si la palette est vide, on ne fait rien
     if palette.is_empty() {
         println!("La palette est vide. Aucun traitement n'est appliqué.");
@@ -124,12 +125,12 @@ fn to_palette(image: &mut RgbImage, palette: &[Rgb<u8>]) {
     }
 }
 
-fn find_closest_color(pixel: Rgb<u8>, palette: &[Rgb<u8>]) -> Rgb<u8> {
+fn find_closest_color(pixel: Rgba<u8>, palette: &[Rgba<u8>]) -> Rgba<u8> {
     let mut min_distance = f32::MAX;
     let mut closest_color = palette[0];
 
     for &color in palette {
-        let distance = color_distance(pixel, color);
+        let distance = color_distance(&pixel, &color);
         if distance < min_distance {
             min_distance = distance;
             closest_color = color;
@@ -141,7 +142,7 @@ fn find_closest_color(pixel: Rgb<u8>, palette: &[Rgb<u8>]) -> Rgb<u8> {
 // ---------------------------------------------------------
 
 // Question 12
-fn random_dithering(image: &mut RgbImage) {
+fn random_dithering(image: &mut RgbaImage) {
     let mut rng = rand::thread_rng(); // Générateur de nombres aléatoires
 
     for y in 0..image.height() {
@@ -199,7 +200,7 @@ fn generate_bayer_matrix(order: usize) -> Vec<Vec<u32>> {
 // ---------------------------------------------------------
 
 // Question 15
-fn bayer_dithering(image: &mut RgbImage, bayer_matrix: &[Vec<u32>]) {
+fn bayer_dithering(image: &mut RgbaImage, bayer_matrix: &[Vec<u32>]) {
     let matrix_size = bayer_matrix.len() as u32;
 
     for y in 0..image.height() {
@@ -222,7 +223,7 @@ fn bayer_dithering(image: &mut RgbImage, bayer_matrix: &[Vec<u32>]) {
 // ---------------------------------------------------------
 
 // Question 16
-fn error_diffusion(image: &mut RgbImage) {
+fn error_diffusion(image: &mut RgbaImage) {
     let width = image.width() as i32;
     let height = image.height() as i32;
 
@@ -262,6 +263,160 @@ fn error_diffusion(image: &mut RgbImage) {
 }
 // ---------------------------------------------------------
 
+// Question 18 
+fn error_diffusion_palette(image: &mut RgbaImage, palette: &[Rgba<u8>]) {
+    let width = image.width() as i32;
+    let height = image.height() as i32;
+
+    // Parcours des pixels
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(x as u32, y as u32);
+            let original_color = *pixel;
+
+            // Trouver la couleur la plus proche dans la palette
+            let closest_color = palette.iter().min_by(|&c1, &c2| {
+                color_distance(&original_color, c1)
+                    .partial_cmp(&color_distance(&original_color, c2))
+                    .unwrap()
+            }).unwrap();
+
+            // Appliquer la couleur la plus proche au pixel
+            image.put_pixel(x as u32, y as u32, *closest_color);
+
+            // Calculer l'erreur (différence entre l'original et la couleur choisie)
+            let error = [
+                original_color[0] as i32 - closest_color[0] as i32,
+                original_color[1] as i32 - closest_color[1] as i32,
+                original_color[2] as i32 - closest_color[2] as i32,
+            ];
+
+            // Diffuser l'erreur aux pixels voisins
+            if x + 1 < width {
+                let right_pixel = image.get_pixel(x as u32 + 1, y as u32);
+                let new_right_pixel = [
+                    (right_pixel[0] as i32 + error[0] * 7 / 16).clamp(0, 255) as u8,
+                    (right_pixel[1] as i32 + error[1] * 7 / 16).clamp(0, 255) as u8,
+                    (right_pixel[2] as i32 + error[2] * 7 / 16).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32 + 1, y as u32, Rgba(new_right_pixel));
+            }
+
+            if y + 1 < height {
+                if x > 0 {
+                    let bottom_left_pixel = image.get_pixel(x as u32 - 1, y as u32 + 1);
+                    let new_bottom_left_pixel = [
+                        (bottom_left_pixel[0] as i32 + error[0] * 3 / 16).clamp(0, 255) as u8,
+                        (bottom_left_pixel[1] as i32 + error[1] * 3 / 16).clamp(0, 255) as u8,
+                        (bottom_left_pixel[2] as i32 + error[2] * 3 / 16).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 - 1, y as u32 + 1, Rgba(new_bottom_left_pixel));
+                }
+
+                let bottom_pixel = image.get_pixel(x as u32, y as u32 + 1);
+                let new_bottom_pixel = [
+                    (bottom_pixel[0] as i32 + error[0] * 5 / 16).clamp(0, 255) as u8,
+                    (bottom_pixel[1] as i32 + error[1] * 5 / 16).clamp(0, 255) as u8,
+                    (bottom_pixel[2] as i32 + error[2] * 5 / 16).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32, y as u32 + 1, Rgba(new_bottom_pixel));
+
+                if x + 1 < width {
+                    let bottom_right_pixel = image.get_pixel(x as u32 + 1, y as u32 + 1);
+                    let new_bottom_right_pixel = [
+                        (bottom_right_pixel[0] as i32 + error[0] * 1 / 16).clamp(0, 255) as u8,
+                        (bottom_right_pixel[1] as i32 + error[1] * 1 / 16).clamp(0, 255) as u8,
+                        (bottom_right_pixel[2] as i32 + error[2] * 1 / 16).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 + 1, y as u32 + 1, Rgba(new_bottom_right_pixel));
+                }
+            }
+        }
+    }
+}
+// ---------------------------------------------------------
+
+// Question 19
+fn error_diffusion_matrice_floyd_steinberg(image: &mut RgbaImage, palette: &[Rgba<u8>]) {
+    let width = image.width() as i32;
+    let height = image.height() as i32;
+
+    // Parcours des pixels
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(x as u32, y as u32);
+            let original_color = *pixel;
+
+            // Trouver la couleur la plus proche dans la palette
+            let closest_color = palette.iter().min_by(|&c1, &c2| {
+                color_distance(&original_color, c1)
+                    .partial_cmp(&color_distance(&original_color, c2))
+                    .unwrap()
+            }).unwrap();
+
+            // Appliquer la couleur la plus proche au pixel
+            image.put_pixel(x as u32, y as u32, *closest_color);
+
+            // Calculer l'erreur (différence entre l'original et la couleur choisie)
+            let error = [
+                original_color[0] as i32 - closest_color[0] as i32,
+                original_color[1] as i32 - closest_color[1] as i32,
+                original_color[2] as i32 - closest_color[2] as i32,
+            ];
+
+            // Diffuser l'erreur aux pixels voisins selon Floyd-Steinberg
+            if x + 1 < width {
+                let right_pixel = image.get_pixel(x as u32 + 1, y as u32);
+                let new_right_pixel = [
+                    (right_pixel[0] as i32 + (error[0] * 7 / 16)).clamp(0, 255) as u8,
+                    (right_pixel[1] as i32 + (error[1] * 7 / 16)).clamp(0, 255) as u8,
+                    (right_pixel[2] as i32 + (error[2] * 7 / 16)).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32 + 1, y as u32, Rgba(new_right_pixel));
+            }
+
+            if y + 1 < height {
+                if x > 0 {
+                    let bottom_left_pixel = image.get_pixel(x as u32 - 1, y as u32 + 1);
+                    let new_bottom_left_pixel = [
+                        (bottom_left_pixel[0] as i32 + (error[0] * 3 / 16)).clamp(0, 255) as u8,
+                        (bottom_left_pixel[1] as i32 + (error[1] * 3 / 16)).clamp(0, 255) as u8,
+                        (bottom_left_pixel[2] as i32 + (error[2] * 3 / 16)).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 - 1, y as u32 + 1, Rgba(new_bottom_left_pixel));
+                }
+
+                let bottom_pixel = image.get_pixel(x as u32, y as u32 + 1);
+                let new_bottom_pixel = [
+                    (bottom_pixel[0] as i32 + (error[0] * 5 / 16)).clamp(0, 255) as u8,
+                    (bottom_pixel[1] as i32 + (error[1] * 5 / 16)).clamp(0, 255) as u8,
+                    (bottom_pixel[2] as i32 + (error[2] * 5 / 16)).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32, y as u32 + 1, Rgba(new_bottom_pixel));
+
+                if x + 1 < width {
+                    let bottom_right_pixel = image.get_pixel(x as u32 + 1, y as u32 + 1);
+                    let new_bottom_right_pixel = [
+                        (bottom_right_pixel[0] as i32 + (error[0] * 1 / 16)).clamp(0, 255) as u8,
+                        (bottom_right_pixel[1] as i32 + (error[1] * 1 / 16)).clamp(0, 255) as u8,
+                        (bottom_right_pixel[2] as i32 + (error[2] * 1 / 16)).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 + 1, y as u32 + 1, Rgba(new_bottom_right_pixel));
+                }
+            }
+        }
+    }
+}
+// ---------------------------------------------------------
+
 fn main() -> Result<(), ImageError> {
     let args: DitherArgs = argh::from_env();
 
@@ -270,16 +425,24 @@ fn main() -> Result<(), ImageError> {
 
     // Ouvrir l'image
     let mut img: DynamicImage = open(path_in)?;
+    let mut rgba_image = img.to_rgba8();
 
-    let mut rgb_image = img.to_rgb8();
+    // Définir une palette de couleurs (exemple avec 8 couleurs)
+    let palette = vec![
+        Rgba([0, 0, 0, 255]),    // Noir
+        Rgba([255, 255, 255, 255]), // Blanc
+        Rgba([185, 17, 40, 255]),  // Rouge
+        Rgba([19, 105, 18, 255]),  // Vert
+        // Rgba([0, 0, 255, 255]),  // Bleu
+    ];
 
-    // Appliquer la diffusion d'erreur
-    error_diffusion(&mut rgb_image);
+    // Appliquer la diffusion d'erreur avec la palette définie
+    error_diffusion_matrice_floyd_steinberg(&mut rgba_image, &palette);
 
     // Sauvegarder l'image résultante
-    rgb_image.save(&path_out).unwrap();
+    rgba_image.save(&path_out).unwrap();
 
-    println!("Image tramée par matrice de Bayer sauvegardée dans {}", path_out);
+    println!("Image palettisée avec diffusion d'erreur sauvegardée dans {}", path_out);
 
     Ok(())
 }

@@ -686,9 +686,197 @@ Avant de quantifier la couleur d'un pixel suivant la palette, on prend en compte
 
 ### Question 18 - Implémenter la diffusion d’erreur pour la palettisation d’images
 
+Nous avons implémentaté la fonction de diffusion d'erreur pour la palettisation d'images, en tenant compte des trois composantes de couleur (R, G, B). La fonction utilise une matrice simple pour répartir l'erreur entre les pixels voisins :
+
+```rust
+fn error_diffusion_palette(image: &mut RgbaImage, palette: &[Rgba<u8>]) {
+    let width = image.width() as i32;
+    let height = image.height() as i32;
+
+    // Parcours des pixels
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(x as u32, y as u32);
+            let original_color = *pixel;
+
+            // Trouver la couleur la plus proche dans la palette
+            let closest_color = palette.iter().min_by(|&c1, &c2| {
+                color_distance(&original_color, c1)
+                    .partial_cmp(&color_distance(&original_color, c2))
+                    .unwrap()
+            }).unwrap();
+
+            // Appliquer la couleur la plus proche au pixel
+            image.put_pixel(x as u32, y as u32, *closest_color);
+
+            // Calculer l'erreur (différence entre l'original et la couleur choisie)
+            let error = [
+                original_color[0] as i32 - closest_color[0] as i32,
+                original_color[1] as i32 - closest_color[1] as i32,
+                original_color[2] as i32 - closest_color[2] as i32,
+            ];
+
+            // Diffuser l'erreur aux pixels voisins
+            if x + 1 < width {
+                let right_pixel = image.get_pixel(x as u32 + 1, y as u32);
+                let new_right_pixel = [
+                    (right_pixel[0] as i32 + error[0] * 7 / 16).clamp(0, 255) as u8,
+                    (right_pixel[1] as i32 + error[1] * 7 / 16).clamp(0, 255) as u8,
+                    (right_pixel[2] as i32 + error[2] * 7 / 16).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32 + 1, y as u32, Rgba(new_right_pixel));
+            }
+
+            if y + 1 < height {
+                if x > 0 {
+                    let bottom_left_pixel = image.get_pixel(x as u32 - 1, y as u32 + 1);
+                    let new_bottom_left_pixel = [
+                        (bottom_left_pixel[0] as i32 + error[0] * 3 / 16).clamp(0, 255) as u8,
+                        (bottom_left_pixel[1] as i32 + error[1] * 3 / 16).clamp(0, 255) as u8,
+                        (bottom_left_pixel[2] as i32 + error[2] * 3 / 16).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 - 1, y as u32 + 1, Rgba(new_bottom_left_pixel));
+                }
+
+                let bottom_pixel = image.get_pixel(x as u32, y as u32 + 1);
+                let new_bottom_pixel = [
+                    (bottom_pixel[0] as i32 + error[0] * 5 / 16).clamp(0, 255) as u8,
+                    (bottom_pixel[1] as i32 + error[1] * 5 / 16).clamp(0, 255) as u8,
+                    (bottom_pixel[2] as i32 + error[2] * 5 / 16).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32, y as u32 + 1, Rgba(new_bottom_pixel));
+
+                if x + 1 < width {
+                    let bottom_right_pixel = image.get_pixel(x as u32 + 1, y as u32 + 1);
+                    let new_bottom_right_pixel = [
+                        (bottom_right_pixel[0] as i32 + error[0] * 1 / 16).clamp(0, 255) as u8,
+                        (bottom_right_pixel[1] as i32 + error[1] * 1 / 16).clamp(0, 255) as u8,
+                        (bottom_right_pixel[2] as i32 + error[2] * 1 / 16).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 + 1, y as u32 + 1, Rgba(new_bottom_right_pixel));
+                }
+            }
+        }
+    }
+}
+```
+
+Palette : 
+
+    La fonction accepte une liste de couleurs représentant la palette. Chaque pixel sera quantifié à la couleur la plus proche de cette palette.
+
+Erreur : 
+    
+    L'erreur est calculée comme la différence entre les composantes de la couleur originale et celles de la couleur la plus proche.
+
+Diffusion : 
+
+    L'erreur est distribuée aux pixels voisins selon les coefficients de diffusion. Dans cet exemple, 50 % de l'erreur est envoyée au pixel de droite et 50 % au pixel en dessous.
+
 ---
 
 ### Question 19 - Implémenter la diffusion d’erreur pour la matrice de Floyd-Steinberg
+
+Nous avons implémenté la fonction de diffusion d'erreur pour la palettisation d'images, en prenant en compte les trois composantes de couleur (R, G, B). La fonction utilise la matrice de Floyd-Steinberg pour répartir l'erreur de manière proportionnelle entre les pixels voisins :
+
+```rust
+fn error_diffusion_matrice_floyd_steinberg(image: &mut RgbaImage, palette: &[Rgba<u8>]) {
+    let width = image.width() as i32;
+    let height = image.height() as i32;
+
+    // Parcours des pixels
+    for y in 0..height {
+        for x in 0..width {
+            let pixel = image.get_pixel(x as u32, y as u32);
+            let original_color = *pixel;
+
+            // Trouver la couleur la plus proche dans la palette
+            let closest_color = palette.iter().min_by(|&c1, &c2| {
+                color_distance(&original_color, c1)
+                    .partial_cmp(&color_distance(&original_color, c2))
+                    .unwrap()
+            }).unwrap();
+
+            // Appliquer la couleur la plus proche au pixel
+            image.put_pixel(x as u32, y as u32, *closest_color);
+
+            // Calculer l'erreur (différence entre l'original et la couleur choisie)
+            let error = [
+                original_color[0] as i32 - closest_color[0] as i32,
+                original_color[1] as i32 - closest_color[1] as i32,
+                original_color[2] as i32 - closest_color[2] as i32,
+            ];
+
+            // Diffuser l'erreur aux pixels voisins selon Floyd-Steinberg
+            if x + 1 < width {
+                let right_pixel = image.get_pixel(x as u32 + 1, y as u32);
+                let new_right_pixel = [
+                    (right_pixel[0] as i32 + (error[0] * 7 / 16)).clamp(0, 255) as u8,
+                    (right_pixel[1] as i32 + (error[1] * 7 / 16)).clamp(0, 255) as u8,
+                    (right_pixel[2] as i32 + (error[2] * 7 / 16)).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32 + 1, y as u32, Rgba(new_right_pixel));
+            }
+
+            if y + 1 < height {
+                if x > 0 {
+                    let bottom_left_pixel = image.get_pixel(x as u32 - 1, y as u32 + 1);
+                    let new_bottom_left_pixel = [
+                        (bottom_left_pixel[0] as i32 + (error[0] * 3 / 16)).clamp(0, 255) as u8,
+                        (bottom_left_pixel[1] as i32 + (error[1] * 3 / 16)).clamp(0, 255) as u8,
+                        (bottom_left_pixel[2] as i32 + (error[2] * 3 / 16)).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 - 1, y as u32 + 1, Rgba(new_bottom_left_pixel));
+                }
+
+                let bottom_pixel = image.get_pixel(x as u32, y as u32 + 1);
+                let new_bottom_pixel = [
+                    (bottom_pixel[0] as i32 + (error[0] * 5 / 16)).clamp(0, 255) as u8,
+                    (bottom_pixel[1] as i32 + (error[1] * 5 / 16)).clamp(0, 255) as u8,
+                    (bottom_pixel[2] as i32 + (error[2] * 5 / 16)).clamp(0, 255) as u8,
+                    255,
+                ];
+                image.put_pixel(x as u32, y as u32 + 1, Rgba(new_bottom_pixel));
+
+                if x + 1 < width {
+                    let bottom_right_pixel = image.get_pixel(x as u32 + 1, y as u32 + 1);
+                    let new_bottom_right_pixel = [
+                        (bottom_right_pixel[0] as i32 + (error[0] * 1 / 16)).clamp(0, 255) as u8,
+                        (bottom_right_pixel[1] as i32 + (error[1] * 1 / 16)).clamp(0, 255) as u8,
+                        (bottom_right_pixel[2] as i32 + (error[2] * 1 / 16)).clamp(0, 255) as u8,
+                        255,
+                    ];
+                    image.put_pixel(x as u32 + 1, y as u32 + 1, Rgba(new_bottom_right_pixel));
+                }
+            }
+        }
+    }
+}
+```
+
+Palette :
+
+    L'algorithme recherche la couleur la plus proche dans la palette définie. La distance euclidienne est utilisée pour évaluer la proximité des couleurs.
+
+Matrice de Floyd-Steinberg :
+
+    Les erreurs sont réparties aux pixels voisins selon le schéma :
+    7/16​ * (droite), 3/16 *​ (bas-gauche), 5/16 *​ (bas), et 1/16 * (bas-droite).
+
+Gestion des pixels :
+
+    Les erreurs sont appliquées seulement si les pixels concernés sont dans les limites de l'image.
+    Les valeurs sont clampées entre 0 et 255 pour éviter les débordements.
+
+Structure :
+    
+    L'algorithme reste proche de votre structure d'origine (question 18), mais implémente la matrice de Floyd-Steinberg.
 
 ---
 
