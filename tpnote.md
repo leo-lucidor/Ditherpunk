@@ -1,5 +1,10 @@
 # Ditherpunk
 
+## Membre du groupe
+
+* Lucidor Léo
+* Blandeau Erwan
+* Pilet Colin
 
 ## Partie - 1 
 
