@@ -658,6 +658,20 @@ Avant de quantifier la couleur d'un pixel suivant la palette, on prend en compte
 
 ### Question 21 - Donner une spécification de votre interface sous forme d’un projet d’écran d’aide, tel que celui qui sera obtenu par cargo run -- --help
 
+Pour permettre l'affichage des différentes fonction de l'interface avec la commande ```cargo run -- --help``` il a fallut ajouter ces fonction avec la bibliotheque argh.
+
+``` rust
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+/// Rendu de l’image en monochrome par dithering
+#[argh(subcommand, name="dithering")]
+struct OptsDithering {}
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+/// Rendu de l’image en monochrome en utilisant la matrice de Bayer
+#[argh(subcommand, name="Bayer")]
+struct OptsBayer {}
+```
+
 ---
 
 ### Question 22 - Déterminer le type Rust correspondant à une sélection d’options fournies par l’utilisateur
