@@ -3,6 +3,8 @@ use image::{open, DynamicImage, ImageError};
 use image::{RgbImage, Rgb};
 use rand::Rng; // Pour générer des nombres aléatoires
 
+mod help;
+
 #[derive(Debug, Clone, PartialEq, FromArgs)]
 /// Convertit une image en monochrome ou vers une palette réduite de couleurs.
 struct DitherArgs {
@@ -25,6 +27,8 @@ struct DitherArgs {
 enum Mode {
     Seuil(OptsSeuil),
     Palette(OptsPalette),
+    Dithering(OptsDithering),
+    Bayer(OptsBayer),
 }
 
 #[derive(Debug, Clone, PartialEq, FromArgs)]
@@ -42,6 +46,21 @@ struct OptsPalette {
     #[argh(option)]
     n_couleurs: usize
 }
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+/// Rendu de l’image en monochrome par dithering
+#[argh(subcommand, name="dithering")]
+struct OptsDithering {}
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+/// Rendu de l’image en monochrome en utilisant la matrice de Bayer
+#[argh(subcommand, name="Bayer")]
+struct OptsBayer {}
+
+#[derive(Debug, Clone, PartialEq, FromArgs)]
+/// Rendu de l’image en monochrome en utilisant la matrice de Bayer
+#[argh(subcommand, name="Bayer")]
+struct OptsBayer {}
  
 const WHITE: image::Rgb<u8> = image::Rgb([255, 255, 255]);
 const GREY: image::Rgb<u8> = image::Rgb([127, 127, 127]);
